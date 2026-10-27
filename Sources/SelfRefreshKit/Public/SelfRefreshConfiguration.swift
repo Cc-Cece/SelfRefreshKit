@@ -1,5 +1,63 @@
 import Foundation
 
+/// Supported built-in languages for `SelfRefreshKit`.
+/// Priority:
+/// 1. Manual user override in `SelfRefreshKit` UI (if not `.followHost`)
+/// 2. Host application language / system preferred language
+/// 3. Fallback to `.english`
+public enum SelfRefreshLanguage: String, CaseIterable, Codable, Identifiable, Sendable {
+    case followHost = "host"
+    case simplifiedChinese = "zh-Hans"
+    case english = "en"
+    case cantonese = "yue-Hant-HK"
+    case japanese = "ja"
+    case german = "de"
+    case french = "fr"
+    case korean = "ko"
+
+    public var id: String { rawValue }
+
+    public var displayName: String {
+        switch self {
+        case .followHost: return "Auto (Host / System)"
+        case .simplifiedChinese: return "简体中文"
+        case .english: return "English"
+        case .cantonese: return "粵語 / 繁體中文"
+        case .japanese: return "日本語"
+        case .german: return "Deutsch"
+        case .french: return "Français"
+        case .korean: return "한국어"
+        }
+    }
+
+    /// Resolves a locale/language identifier string into one of the 7 concrete languages, falling back to `.english`.
+    public static func resolveConcrete(from identifier: String) -> SelfRefreshLanguage {
+        let lower = identifier.lowercased().replacingOccurrences(of: "_", with: "-")
+        if lower.hasPrefix("yue") || lower.hasPrefix("zh-hant") || lower.hasPrefix("zh-hk") || lower.hasPrefix("zh-tw") || lower.hasPrefix("zh-mo") {
+            return .cantonese
+        }
+        if lower.hasPrefix("zh") {
+            return .simplifiedChinese
+        }
+        if lower.hasPrefix("ja") {
+            return .japanese
+        }
+        if lower.hasPrefix("de") {
+            return .german
+        }
+        if lower.hasPrefix("fr") {
+            return .french
+        }
+        if lower.hasPrefix("ko") {
+            return .korean
+        }
+        if lower.hasPrefix("en") {
+            return .english
+        }
+        return .english
+    }
+}
+
 /// Supported loopback VPN applications for local lockdownd communication (`10.7.0.1`).
 /// Defaults to `.localDevVPN` while remaining compatible with `.stosVPN` and `.wireGuard`.
 public enum LoopbackVPNApp: String, CaseIterable, Codable, Identifiable, Sendable {
@@ -152,11 +210,12 @@ public struct HealthCheckReport: Equatable, Sendable {
 
 /// Configuration for `SelfRefreshKit`.
 public struct SelfRefreshConfiguration: Sendable {
-    public static let kitVersion = "0.2.0"
+    public static let kitVersion = "0.3.0"
     public static let minimuxerEngineVersion = "minimuxer-bridge 0.4.x"
     public static let altSignEngineVersion = "SideSign/AltSign 1.6.x"
+    public static let officialRepositoryURL = URL(string: "https://github.com/Cc-Cece/SelfRefreshKit/")!
 
-    /// Custom URL scheme registered by the host application (e.g. `"picharbor"` -> `picharbor://refresh`).
+    /// Custom URL scheme registered by the host application (kept for backward compatibility).
     public var urlScheme: String
     /// Default preferred loopback VPN app (`.localDevVPN`).
     public var preferredVPN: LoopbackVPNApp
@@ -166,7 +225,9 @@ public struct SelfRefreshConfiguration: Sendable {
     public var githubRepository: String?
     /// Background task identifier suffix or full identifier if the host registers background refresh.
     public var backgroundTaskIdentifier: String?
-    /// Optional custom localization function injected by the host app (e.g., PicHarbor's `L10n.text`).
+    /// Optional provider returning the host application's current language code (e.g. `"zh-Hans"`, `"en"`, `"yue-Hant-HK"`).
+    public var hostLanguageProvider: (@Sendable () -> String)?
+    /// Optional custom localization function injected by the host app.
     public var localizer: (@Sendable (String) -> String)?
 
     public init(
@@ -175,6 +236,7 @@ public struct SelfRefreshConfiguration: Sendable {
         defaultAnisetteURL: String = "https://ani.sidestore.io",
         githubRepository: String? = nil,
         backgroundTaskIdentifier: String? = nil,
+        hostLanguageProvider: (@Sendable () -> String)? = nil,
         localizer: (@Sendable (String) -> String)? = nil
     ) {
         self.urlScheme = urlScheme
@@ -182,6 +244,7 @@ public struct SelfRefreshConfiguration: Sendable {
         self.defaultAnisetteURL = defaultAnisetteURL
         self.githubRepository = githubRepository
         self.backgroundTaskIdentifier = backgroundTaskIdentifier
+        self.hostLanguageProvider = hostLanguageProvider
         self.localizer = localizer
     }
 

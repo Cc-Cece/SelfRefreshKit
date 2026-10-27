@@ -36,6 +36,11 @@ public final class SelfRefreshManager: ObservableObject {
             defaults.set(selectedVPN.rawValue, forKey: Keys.selectedVPN)
         }
     }
+    @Published public var selectedLanguage: SelfRefreshLanguage = .followHost {
+        didSet {
+            defaults.set(selectedLanguage.rawValue, forKey: Keys.selectedLanguage)
+        }
+    }
     @Published public var isSetupGuideSkipped: Bool = false {
         didSet {
             defaults.set(isSetupGuideSkipped, forKey: Keys.setupGuideSkipped)
@@ -61,6 +66,7 @@ public final class SelfRefreshManager: ObservableObject {
         static let appleID = "selfrefreshkit.appleID"
         static let anisetteURL = "selfrefreshkit.anisetteURL"
         static let selectedVPN = "selfrefreshkit.selectedVPN"
+        static let selectedLanguage = "selfrefreshkit.selectedLanguage"
         static let takenOver = "selfrefreshkit.takenOver"
         static let lastRefreshDate = "selfrefreshkit.lastRefreshDate"
         static let cachedExpirationDate = "selfrefreshkit.cachedExpirationDate"
@@ -84,6 +90,10 @@ public final class SelfRefreshManager: ObservableObject {
         if let rawVPN = defaults.string(forKey: Keys.selectedVPN),
            let vpn = LoopbackVPNApp(rawValue: rawVPN) {
             self.selectedVPN = vpn
+        }
+        if let rawLang = defaults.string(forKey: Keys.selectedLanguage),
+           let lang = SelfRefreshLanguage(rawValue: rawLang) {
+            self.selectedLanguage = lang
         }
         self.isLocalCertificateTakenOver = defaults.bool(forKey: Keys.takenOver)
         self.lastRefreshDate = defaults.object(forKey: Keys.lastRefreshDate) as? Date
@@ -113,15 +123,22 @@ public final class SelfRefreshManager: ObservableObject {
         loadExistingPairingFileIfPresent()
     }
 
-    /// Translates a user-facing string using the host app's localizer if provided, or falls back to `SelfRefreshStrings`.
+    /// Translates a user-facing string according to:
+    /// 1. User's manual language choice in `SelfRefreshKit` (if not `.followHost`)
+    /// 2. Host app's language provider or system preferred language (with `.english` fallback)
     public func localized(_ key: String) -> String {
-        if let localizer = configuration.localizer {
+        if selectedLanguage == .followHost, let localizer = configuration.localizer {
             let result = localizer(key)
             if result != key {
                 return result
             }
         }
-        return SelfRefreshStrings.translate(key)
+        let hostIdentifier = configuration.hostLanguageProvider?() ?? Locale.preferredLanguages.first
+        return SelfRefreshStrings.translate(
+            key,
+            preferredLanguage: selectedLanguage,
+            hostLanguageIdentifier: hostIdentifier
+        )
     }
 
     public var pairingFileURL: URL {
@@ -733,18 +750,19 @@ public final class SelfRefreshManager: ObservableObject {
 }
 
 #if canImport(AppIntents)
+/// Built-in background iOS Shortcuts `AppIntent` (English default, `openAppWhenRun = false` so it runs silently in the background without opening the app).
 @available(iOS 17.0, macOS 14.0, *)
 public struct SelfRefreshProfileIntent: AppIntent {
-    public static var title: LocalizedStringResource = "刷新应用签名描述文件"
-    public static var description = IntentDescription("通过 LocalDevVPN 本地回环隧道，1 秒无感刷新当前应用的 7 天描述文件有效期。")
-    public static var openAppWhenRun: Bool = true
+    public static var title: LocalizedStringResource = "Refresh App Provisioning Profile"
+    public static var description = IntentDescription("Silently refreshes the 7-day provisioning profile in the background via LocalDevVPN without opening the app.")
+    public static var openAppWhenRun: Bool = false
 
     public init() {}
 
     @MainActor
     public func perform() async throws -> some IntentResult & ProvidesDialog {
         try await SelfRefreshManager.shared.refreshProfileOnly()
-        return .result(dialog: "描述文件已成功刷新，重置为 7 天有效期。")
+        return .result(dialog: "Provisioning profile refreshed for another 7 days.")
     }
 }
 #endif

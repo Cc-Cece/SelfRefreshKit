@@ -80,14 +80,13 @@ final class SelfRefreshKitTests: XCTestCase {
     }
 
     @MainActor
-    func testRequiredStepsAndWizardStateAndFullAuthentication() async throws {
+    func testRequiredStepsAndFullAuthentication() async throws {
         let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         let suiteName = "test.selfrefresh.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!
         let manager = SelfRefreshManager(defaults: defaults, storageDirectory: tempDir)
 
         XCTAssertEqual(manager.completedRequiredStepsCount, 0)
-        XCTAssertTrue(manager.shouldAutoPresentSetupWizard)
 
         let plistDict: [String: Any] = [
             "UDID": "00008140-00040D4C0A39801C",
@@ -120,10 +119,55 @@ final class SelfRefreshKitTests: XCTestCase {
     }
 
     @MainActor
-    func testDefaultVPNIsLocalDevVPNAndCompatibleWithOthers() {
+    func testSevenLanguagesHostFallbackToEnglishAndManualOverride() {
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let suiteName = "test.selfrefresh.lang.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        let manager = SelfRefreshManager(defaults: defaults, storageDirectory: tempDir)
+
+        var simulatedHostLang = "es-ES" // Unsupported language -> should fallback to English
+        manager.configure(
+            SelfRefreshConfiguration(
+                urlScheme: "picharbor",
+                hostLanguageProvider: { simulatedHostLang }
+            )
+        )
+
+        XCTAssertEqual(manager.selectedLanguage, .followHost)
+        XCTAssertEqual(manager.localized("当前状态"), "Current Status")
+
+        simulatedHostLang = "zh-Hans"
+        XCTAssertEqual(manager.localized("当前状态"), "当前状态")
+
+        simulatedHostLang = "yue-HK"
+        XCTAssertEqual(manager.localized("当前状态"), "目前狀態")
+
+        simulatedHostLang = "ja-JP"
+        XCTAssertEqual(manager.localized("当前状态"), "現在のステータス")
+
+        simulatedHostLang = "de-DE"
+        XCTAssertEqual(manager.localized("当前状态"), "Aktueller Status")
+
+        simulatedHostLang = "fr-FR"
+        XCTAssertEqual(manager.localized("当前状态"), "État actuel")
+
+        simulatedHostLang = "ko-KR"
+        XCTAssertEqual(manager.localized("当前状态"), "현재 상태")
+
+        // Manual override takes priority over host language
+        manager.selectedLanguage = .japanese
+        simulatedHostLang = "en-US"
+        XCTAssertEqual(manager.localized("当前状态"), "現在のステータス")
+    }
+
+    @MainActor
+    func testDefaultVPNRepoURLAndBackgroundShortcutIntent() {
         let config = SelfRefreshConfiguration(urlScheme: "picharbor")
         XCTAssertEqual(config.preferredVPN, .localDevVPN)
-        XCTAssertEqual(config.refreshWakeupURLString, "picharbor://refresh")
+        XCTAssertEqual(SelfRefreshConfiguration.officialRepositoryURL.absoluteString, "https://github.com/Cc-Cece/SelfRefreshKit/")
+        if #available(iOS 16.0, macOS 13.0, *) {
+            XCTAssertFalse(SelfRefreshProfileIntent.openAppWhenRun)
+        }
         XCTAssertGreaterThanOrEqual(AnisetteServerPreset.defaults.count, 4)
     }
 }
