@@ -31,7 +31,13 @@ use zip::CompressionMethod;
 use zip::write::SimpleFileOptions;
 use zip::ZipWriter;
 
+mod session;
 mod text;
+use session::{
+    SessionRecord, discard_sessions, is_transport_error, load_session, ordered_servers,
+    read_remembered_server, save_session, session_matches_state, should_clear_anisette,
+    state_sha256, write_remembered_server,
+};
 use text::{t, tf};
 
 const SERVERS: &[&str] = &[
@@ -158,7 +164,7 @@ async fn sign_command() -> Result<(), Report> {
     let password = request.password;
     let udid = request.udid.trim().to_string();
     let ipa = PathBuf::from(request.ipa.trim());
-    if apple_id.is_empty() || password.is_empty() {
+    if apple_id.is_empty() {
         bail!("{}", t("needAppleId"));
     }
     if udid.is_empty() {
@@ -177,8 +183,29 @@ async fn sign_command() -> Result<(), Report> {
     let storage_dir = signer_dir();
     fs::create_dir_all(&storage_dir).context(t("storageDirFailed"))?;
 
-    emit_log(&t("loggingIn"));
-    let mut account = login(&apple_id, &password, &server_list(anisette), &storage_dir).await?;
+    let urls = server_list(anisette);
+    let mut account = match open_saved_account(&apple_id, anisette, &storage_dir).await {
+        Ok(Some(account)) => account,
+        Ok(None) => {
+            if password.is_empty() {
+                bail!("{}", t("needAppleId"));
+            }
+            emit_log(&t("loggingIn"));
+            let (account, server) = login(&apple_id, &password, &urls, &storage_dir).await?;
+            persist_login(&apple_id, &server, &storage_dir, &account);
+            account
+        }
+        Err(err) => {
+            emit_log(&tf("sessionUnchecked", &[("error", &public_error(&err))]));
+            if password.is_empty() {
+                return Err(err);
+            }
+            emit_log(&t("loggingIn"));
+            let (account, server) = login(&apple_id, &password, &urls, &storage_dir).await?;
+            persist_login(&apple_id, &server, &storage_dir, &account);
+            account
+        }
+    };
     let mut session = DeveloperSession::from_account(&mut account)
         .await
         .context(t("portalFailed"))?;
@@ -296,6 +323,7 @@ async fn sign_command() -> Result<(), Report> {
         "ipa": out.display().to_string(),
         "bundle_id": chosen,
         "original_bundle_id": original,
+        "team_id": team.team_id,
         "file_sharing": true,
     }));
     Ok(())
@@ -315,17 +343,88 @@ fn read_request() -> Result<SignRequest, Report> {
 }
 
 fn server_list(preferred: &str) -> Vec<String> {
-    let mut urls = Vec::new();
-    if !preferred.is_empty() {
-        urls.push(preferred.trim_end_matches('/').to_string());
+    let saved = read_remembered_server(&signer_dir());
+    ordered_servers(preferred, saved.as_deref(), SERVERS)
+}
+
+fn persist_login(apple_id: &str, server: &str, storage_dir: &Path, account: &AppleAccount) {
+    if let Err(err) = write_remembered_server(storage_dir, server) {
+        emit_log(&public_error(&err));
     }
-    for url in SERVERS {
-        let trimmed = url.trim_end_matches('/').to_string();
-        if !urls.iter().any(|have| have == &trimmed) {
-            urls.push(trimmed);
+    let Some(hash) = state_sha256(storage_dir) else {
+        return;
+    };
+    let Some(spd) = account.spd.clone() else {
+        return;
+    };
+    let record = SessionRecord {
+        apple_id: apple_id.to_string(),
+        server: server.to_string(),
+        state_sha256: hash,
+        spd,
+    };
+    if let Err(err) = save_session(storage_dir, &record) {
+        emit_log(&public_error(&err));
+    }
+}
+
+async fn open_saved_account(
+    apple_id: &str,
+    preferred_server: &str,
+    storage_dir: &Path,
+) -> Result<Option<AppleAccount>, Report> {
+    let Some(saved) = load_session(storage_dir, apple_id)? else {
+        return Ok(None);
+    };
+    let preferred = session::canon_server(preferred_server);
+    if !preferred.is_empty() && preferred != session::canon_server(&saved.server) {
+        return Ok(None);
+    }
+    if !session_matches_state(&saved.state_sha256, state_sha256(storage_dir).as_deref()) {
+        emit_log(&t("sessionStateMismatch"));
+        return Ok(None);
+    }
+    emit_log(&tf("usingAnisette", &[("url", saved.server.as_str())]));
+    let provider = RemoteV3AnisetteProvider::new(
+        &saved.server,
+        Box::new(FsStorage::new(storage_dir.to_path_buf())),
+        "0".to_string(),
+    )?;
+    let mut account = AppleAccount::builder(apple_id)
+        .anisette_provider(provider)
+        .build()
+        .await
+        .context(t("portalFailed"))?;
+    account.spd = Some(saved.spd);
+    let mut session = match DeveloperSession::from_account(&mut account).await {
+        Ok(session) => session,
+        Err(err) if is_transport_error(&report_text(&err)) => return Err(err),
+        Err(err) => {
+            discard_sessions(storage_dir);
+            emit_log(&tf("sessionRejected", &[("error", &public_error(&err))]));
+            return Ok(None);
+        }
+    };
+    match session.list_teams().await {
+        Ok(teams) if !teams.is_empty() => {
+            emit_log(&t("sessionReused"));
+            if let Err(err) = write_remembered_server(storage_dir, &saved.server) {
+                emit_log(&public_error(&err));
+            }
+            Ok(Some(account))
+        }
+        Ok(_) => {
+            discard_sessions(storage_dir);
+            emit_log(&tf("sessionRejected", &[("error", &t("noTeam"))]));
+            Ok(None)
+        }
+        Err(err) if is_transport_error(&report_text(&err)) => Err(err),
+        Err(err) => {
+            discard_sessions(storage_dir);
+            emit_log(&tf("sessionRejected", &[("error", &public_error(&err))]));
+            Ok(None)
         }
     }
-    urls
 }
 
 fn acceptable_anisette(url: &str) -> bool {
@@ -372,7 +471,7 @@ async fn login(
     password: &str,
     urls: &[String],
     storage_dir: &Path,
-) -> Result<AppleAccount, Report> {
+) -> Result<(AppleAccount, String), Report> {
     let mut last_error: Option<Report> = None;
     let mut saw_server = false;
     for url in urls {
@@ -393,23 +492,20 @@ async fn login(
         for attempt in 0..2 {
             let asked = Arc::new(AtomicBool::new(false));
             match login_once(email, password, url, storage_dir, asked.clone()).await {
-                Ok(account) => return Ok(account),
+                Ok(account) => return Ok((account, url.clone())),
                 Err(err) => {
                     if asked.load(Ordering::SeqCst) || failure_class(&err) == FailureClass::AuthStop
                     {
                         return Err(err.into());
                     }
-                    let existed = state_exists(storage_dir);
-                    if attempt == 0
-                        && existed
-                        && failure_class(&err) == FailureClass::AnisetteRetry
-                    {
+                    let mismatch = failure_class(&err) == FailureClass::AnisetteRetry;
+                    if should_clear_anisette(attempt, state_exists(storage_dir), mismatch) {
                         clear_state(storage_dir);
+                        discard_sessions(storage_dir);
                         emit_log(&t("stateCleared"));
                         last_error = Some(err);
                         continue;
                     }
-                    clear_state(storage_dir);
                     emit_log(&tf("serverLoginFailed", &[("url", url.as_str())]));
                     last_error = Some(err);
                     break;

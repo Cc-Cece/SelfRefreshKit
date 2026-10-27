@@ -69,8 +69,12 @@ public final class SelfRefreshManager: ObservableObject {
     @Published public private(set) var latestOTATag: String?
     @Published public private(set) var latestOTADownloadURL: URL?
 
+    /// USB 安装工具写入配对文件的位置，相对宿主的 Documents 目录。
+    public static let usbDropPairingRelativePath = "SelfRefreshKit/pairing.mobiledevicepairing"
+
     private var driver: SelfRefreshBackendDriver
     private let defaults: UserDefaults
+    private let documentsDirectory: URL
     private let storageDirectory: URL
 
     private enum Keys {
@@ -89,12 +93,14 @@ public final class SelfRefreshManager: ObservableObject {
     public init(
         driver: SelfRefreshBackendDriver = DefaultSelfRefreshDriver(),
         defaults: UserDefaults = .standard,
-        storageDirectory: URL? = nil
+        storageDirectory: URL? = nil,
+        documentsDirectory: URL? = nil
     ) {
         self.driver = driver
         self.defaults = defaults
-        let baseDir = storageDirectory ?? FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("SelfRefreshKit", isDirectory: true)
+        let documents = documentsDirectory ?? FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        self.documentsDirectory = documents
+        let baseDir = storageDirectory ?? documents.appendingPathComponent("SelfRefreshKit", isDirectory: true)
         self.storageDirectory = baseDir
         try? FileManager.default.createDirectory(at: baseDir, withIntermediateDirectories: true)
 
@@ -119,6 +125,7 @@ public final class SelfRefreshManager: ObservableObject {
 
         reloadEmbeddedProfile()
         loadExistingPairingFileIfPresent()
+        importUsbDropPairingFileIfPresent()
     }
 
     /// Configures `SelfRefreshKit` on app startup.
@@ -135,6 +142,7 @@ public final class SelfRefreshManager: ObservableObject {
         }
         reloadEmbeddedProfile()
         loadExistingPairingFileIfPresent()
+        importUsbDropPairingFileIfPresent()
     }
 
     /// Translates a `SelfRefreshL10nKey` according to:
@@ -303,6 +311,23 @@ public final class SelfRefreshManager: ObservableObject {
             return
         }
         self.pairingInspection = inspection
+    }
+
+    /// 安装工具把配对文件写到文档目录的固定路径。宿主把正式文件放在别处时，启动后收进来并删掉落点。
+    public func importUsbDropPairingFileIfPresent() {
+        let dropURL = documentsDirectory.appendingPathComponent(Self.usbDropPairingRelativePath)
+        guard dropURL.standardizedFileURL != pairingFileURL.standardizedFileURL else { return }
+        guard FileManager.default.fileExists(atPath: dropURL.path),
+              let data = try? Data(contentsOf: dropURL),
+              (try? importPairingData(data)) != nil else {
+            return
+        }
+        try? FileManager.default.removeItem(at: dropURL)
+        let folder = dropURL.deletingLastPathComponent()
+        if let items = try? FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: nil),
+           items.isEmpty {
+            try? FileManager.default.removeItem(at: folder)
+        }
     }
 
     @discardableResult

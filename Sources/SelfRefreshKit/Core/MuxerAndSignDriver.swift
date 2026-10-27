@@ -613,13 +613,17 @@ final class RealSideSignDriverHelper: @unchecked Sendable {
         let scopedBundleID = "\(bundleIdentifier).\(team.identifier)"
 
         let matchedAppID: AppID
-        if let existing = appIDs.first(where: { $0.bundleIdentifier == bundleIdentifier || $0.bundleIdentifier == scopedBundleID }) {
-            matchedAppID = existing
+        if let exact = appIDs.first(where: { $0.bundleIdentifier == bundleIdentifier }) {
+            matchedAppID = exact
         } else {
             do {
                 matchedAppID = try await DeveloperPortal.shared.addAppID(withName: "SelfRefreshApp", bundleIdentifier: bundleIdentifier, team: team, session: session)
             } catch {
-                matchedAppID = try await DeveloperPortal.shared.addAppID(withName: "SelfRefreshApp", bundleIdentifier: scopedBundleID, team: team, session: session)
+                if let scoped = appIDs.first(where: { $0.bundleIdentifier == scopedBundleID }) {
+                    matchedAppID = scoped
+                } else {
+                    matchedAppID = try await DeveloperPortal.shared.addAppID(withName: "SelfRefreshApp", bundleIdentifier: scopedBundleID, team: team, session: session)
+                }
             }
         }
 
@@ -629,6 +633,52 @@ final class RealSideSignDriverHelper: @unchecked Sendable {
             team: team,
             session: session
         )
+    }
+
+    func assertProfileIsInstallable(_ profile: ProvisioningProfile, udid: String) throws {
+        let identifier = profile.bundleIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !identifier.isEmpty, !identifier.contains("*") else {
+            throw SelfRefreshError.backendOperationFailed("描述文件没有可用的明确 Bundle ID，安装已中止。")
+        }
+        guard BundleInstallIdentity.profileCoversDevice(deviceIDs: profile.deviceIDs, udid: udid) else {
+            throw SelfRefreshError.backendOperationFailed(
+                "描述文件 \(identifier) 未包含本机 UDID，安装已中止。"
+            )
+        }
+    }
+
+    func assertExtensionsWereParsed(appBundleURL: URL, parsed: Set<AppBundle>) throws {
+        let plugins = appBundleURL.appendingPathComponent("PlugIns")
+        guard let contents = try? FileManager.default.contentsOfDirectory(
+            at: plugins,
+            includingPropertiesForKeys: nil,
+            options: [.skipsHiddenFiles]
+        ) else {
+            return
+        }
+        let parsedURLs = Set(parsed.map { $0.fileURL.standardizedFileURL.path })
+        for url in contents where url.pathExtension.lowercased() == "appex" {
+            if !parsedURLs.contains(url.standardizedFileURL.path) {
+                throw SelfRefreshError.backendOperationFailed(
+                    "无法读取扩展 \(url.lastPathComponent) 的 Bundle ID，安装已中止。"
+                )
+            }
+        }
+    }
+
+    func assertBundlesMatchProfiles(appBundleURL: URL, profiles: [ProvisioningProfile]) throws {
+        guard let resigned = AppBundle(fileURL: appBundleURL) else {
+            throw SelfRefreshError.backendOperationFailed("重写 Bundle ID 后无法再次读取应用包，安装已中止。")
+        }
+        let bundles = [resigned] + Array(resigned.appExtensions)
+        for bundle in bundles {
+            let identifier = try BundleInstallIdentity.bundleIdentifier(at: bundle.fileURL)
+            guard profiles.contains(where: { $0.bundleIdentifier == identifier }) else {
+                throw SelfRefreshError.backendOperationFailed(
+                    "Bundle ID \(identifier) 没有对应的描述文件，安装已中止。"
+                )
+            }
+        }
     }
 
     #if canImport(IDevice)
@@ -702,24 +752,61 @@ final class RealSideSignDriverHelper: @unchecked Sendable {
         guard let appBundle = AppBundle(fileURL: appBundleURL) else {
             throw SelfRefreshError.invalidProvisioningProfile
         }
+        try assertExtensionsWereParsed(appBundleURL: appBundleURL, parsed: appBundle.appExtensions)
 
-        var profilesToSign: [ProvisioningProfile] = []
+        let ipaMainID = appBundle.bundleIdentifier
+        let desiredMainID = bundleIdentifier.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            ? ipaMainID
+            : bundleIdentifier
         let mainProfile = try await ensureAppIDAndDownloadProfile(
-            bundleIdentifier: bundleIdentifier,
+            bundleIdentifier: desiredMainID,
             team: team,
             session: portalSession
         )
-        profilesToSign.append(mainProfile)
+        try assertProfileIsInstallable(mainProfile, udid: pairingInfo.udid)
+        let installedMainID = mainProfile.bundleIdentifier
+        try BundleInstallIdentity.align(
+            bundleURL: appBundleURL,
+            from: ipaMainID,
+            to: installedMainID,
+            oldMain: ipaMainID,
+            newMain: installedMainID
+        )
 
+        var profilesToSign: [ProvisioningProfile] = [mainProfile]
         for ext in appBundle.appExtensions {
-            if let extProfile = try? await ensureAppIDAndDownloadProfile(
-                bundleIdentifier: ext.bundleIdentifier,
+            let requestedExtID = BundleInstallIdentity.mappedIdentifier(
+                ext.bundleIdentifier,
+                oldMain: ipaMainID,
+                newMain: installedMainID
+            )
+            if requestedExtID == installedMainID {
+                throw SelfRefreshError.backendOperationFailed(
+                    "扩展 \(ext.bundleIdentifier) 与主应用 Bundle ID 相同，安装已中止。"
+                )
+            }
+            let extProfile = try await ensureAppIDAndDownloadProfile(
+                bundleIdentifier: requestedExtID,
                 team: team,
                 session: portalSession
-            ) {
-                profilesToSign.append(extProfile)
+            )
+            try assertProfileIsInstallable(extProfile, udid: pairingInfo.udid)
+            if extProfile.bundleIdentifier == installedMainID {
+                throw SelfRefreshError.backendOperationFailed(
+                    "扩展 \(ext.bundleIdentifier) 拿到了主应用的描述文件，安装已中止。"
+                )
             }
+            try BundleInstallIdentity.align(
+                bundleURL: ext.fileURL,
+                from: ext.bundleIdentifier,
+                to: extProfile.bundleIdentifier,
+                oldMain: ipaMainID,
+                newMain: installedMainID
+            )
+            profilesToSign.append(extProfile)
         }
+
+        try assertBundlesMatchProfiles(appBundleURL: appBundleURL, profiles: profilesToSign)
 
         let signer = AppBundleSigner(team: team, keyStore: keyStore)
         try await signer.signApp(at: appBundleURL, provisioningProfiles: profilesToSign)
@@ -1076,6 +1163,19 @@ final class IdeviceTunnelBridge: @unchecked Sendable {
         return remotePath
     }
 
+    /// Copy `IdeviceFfiError.message` before `idevice_error_free` releases it.
+    private static func consumeIdeviceError(_ error: UnsafeMutablePointer<IdeviceFfiError>) -> String {
+        let detail: String
+        if let message = error.pointee.message {
+            detail = (String(validatingUTF8: message) ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+        } else {
+            detail = ""
+        }
+        idevice_error_free(error)
+        return detail
+    }
+
     private func installDeveloperPackage(client: OpaquePointer, remotePath: String) throws {
         let options = plist_new_dict()
         defer { plist_free(options) }
@@ -1084,8 +1184,11 @@ final class IdeviceTunnelBridge: @unchecked Sendable {
             installation_proxy_install(client, pathPtr, options)
         }
         if let installErr {
-            idevice_error_free(installErr)
-            throw SelfRefreshError.backendOperationFailed("installation_proxy_install failed")
+            let detail = Self.consumeIdeviceError(installErr)
+            let reason = detail.isEmpty
+                ? "installation_proxy_install failed"
+                : "installation_proxy_install failed: \(detail)"
+            throw SelfRefreshError.backendOperationFailed(reason)
         }
     }
 

@@ -10,9 +10,9 @@
 
 ## 便携版
 
-GitHub Release 里的 `SelfRefreshKit.exe` 是单个文件。复制到任意目录后直接打开。它自带窗口、签名程序和 Python 运行库，不需要另装 .NET、Rust 或 Python。
+GitHub Release 里的 `SelfRefreshKit.exe` 是单个文件。复制到任意目录后直接打开。它自带签名程序和一份裁过的 Python 运行库，不需要另装 Rust 或 Python。
 
-仍需要 Windows、iTunes 或 Microsoft Store 的「Apple 设备」，以及数据线。手机保持解锁，并已打开开发者模式。
+需要本机已安装 [.NET 10 桌面运行时](https://dotnet.microsoft.com/download/dotnet/10.0)（Windows Desktop Runtime，不是只装 ASP.NET）。已安装 .NET 10 SDK 的机器也满足。仍需要 Windows、iTunes 或 Microsoft Store 的「Apple 设备」，以及数据线。手机保持解锁，并已打开开发者模式。
 
 推送 `v*` 标签时，GitHub Action 会编译这个文件并发布到对应的 Release。
 
@@ -33,7 +33,7 @@ GitHub Release 里的 `SelfRefreshKit.exe` 是单个文件。复制到任意目�
 powershell -File tools/SelfRefreshSetup/publish.ps1
 ```
 
-输出是 `tools/SelfRefreshSetup/dist/SelfRefreshKit.exe` 这一个文件。脚本会编译签名程序，准备 Python 3.11 和 pymobiledevice3 11.45.0，再把它们和窗口打进这个 exe。
+输出是 `tools/SelfRefreshSetup/dist/SelfRefreshKit.exe` 这一个文件。脚本会编译签名程序，准备 Python 3.11 和 pymobiledevice3 11.45.0 里实际用到的部分，再把它们和窗口打进这个 exe。窗口依赖系统里的 .NET 10 桌面运行时，不把运行时打进文件。
 
 开发调试仍可以用本机的 Python 3.11：
 

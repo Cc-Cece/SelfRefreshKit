@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import json
 import logging
 import os
@@ -18,6 +19,7 @@ import subprocess
 import sys
 import threading
 import zipfile
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -26,6 +28,7 @@ from i18n import t
 DROP_DIR = "SelfRefreshKit"
 DROP_NAME = "pairing.mobiledevicepairing"
 DROP_RELATIVE = f"{DROP_DIR}/{DROP_NAME}"
+MAX_SIGNED_PAIRS = 10
 
 
 def log(message: str) -> None:
@@ -163,7 +166,178 @@ def find_signer() -> Path | None:
     return None
 
 
-def sign_ipa(ipa: Path, udid: str, device_name: str) -> dict[str, Any]:
+def data_root() -> Path:
+    return Path(os.environ.get("LOCALAPPDATA") or Path.home()) / "SelfRefreshSetup"
+
+
+def signed_store_dir() -> Path:
+    return data_root() / "signed"
+
+
+def normalize_udid(udid: str) -> str:
+    return udid.replace("-", "").strip().lower()
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def apple_id_key(apple_id: str) -> str:
+    return hashlib.sha256(apple_id.strip().lower().encode("utf-8")).hexdigest()[:16]
+
+
+def signed_cache_name(input_sha: str, udid: str, apple_id: str) -> str:
+    return f"{input_sha}.{normalize_udid(udid)}.{apple_id_key(apple_id)}.signed.ipa"
+
+
+def signed_index_path() -> Path:
+    return signed_store_dir() / "index.json"
+
+
+def read_signed_index() -> list[dict[str, Any]]:
+    try:
+        data = json.loads(signed_index_path().read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeError):
+        return []
+    if not isinstance(data, dict):
+        return []
+    pairs = data.get("pairs")
+    if not isinstance(pairs, list):
+        return []
+    return [item for item in pairs if isinstance(item, dict)]
+
+
+def write_signed_index(pairs: list[dict[str, Any]]) -> None:
+    root = signed_store_dir()
+    root.mkdir(parents=True, exist_ok=True)
+    payload = json.dumps({"pairs": pairs}, ensure_ascii=False, indent=2)
+    tmp = signed_index_path().with_suffix(".json.tmp")
+    tmp.write_text(payload, encoding="utf-8")
+    tmp.replace(signed_index_path())
+
+
+def as_utc(value: object) -> datetime | None:
+    if not isinstance(value, datetime):
+        return None
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
+
+
+def provision_plist(ipa: Path) -> dict[str, Any] | None:
+    try:
+        with zipfile.ZipFile(ipa) as archive:
+            names = archive.namelist()
+            info_name = host_info_plist_name(names)
+            prefix = info_name[: -len("Info.plist")]
+            name = prefix + "embedded.mobileprovision"
+            if name not in names:
+                return None
+            raw = archive.read(name)
+    except (OSError, zipfile.BadZipFile, RuntimeError, KeyError):
+        return None
+    start = raw.find(b"<?xml")
+    end = raw.find(b"</plist>")
+    if start < 0 or end < start:
+        return None
+    blob = raw[start : end + len(b"</plist>")]
+    try:
+        parsed = plistlib.loads(blob)
+    except Exception:
+        return None
+    return parsed if isinstance(parsed, dict) else None
+
+
+def provision_covers_device(profile: dict[str, Any], udid: str, now: datetime | None = None) -> bool:
+    # An empty device list is not a device-specific profile, so reuse must stop.
+    expiry = as_utc(profile.get("ExpirationDate"))
+    moment = now or datetime.now(timezone.utc)
+    if expiry is None or expiry <= moment:
+        return False
+    devices = profile.get("ProvisionedDevices")
+    if not isinstance(devices, list) or not devices:
+        return False
+    wanted = normalize_udid(udid)
+    if not wanted:
+        return False
+    return any(normalize_udid(str(item)) == wanted for item in devices)
+
+
+def pair_key(pair: dict[str, Any]) -> tuple[str, str, str]:
+    return (
+        str(pair.get("input_sha") or ""),
+        normalize_udid(str(pair.get("udid") or "")),
+        str(pair.get("apple_id") or "").strip().lower(),
+    )
+
+
+def lookup_signed_cache(input_sha: str, udid: str, apple_id: str) -> tuple[Path | None, bool]:
+    wanted = (input_sha, normalize_udid(udid), apple_id.strip().lower())
+    match = next((pair for pair in read_signed_index() if pair_key(pair) == wanted), None)
+    if match is None:
+        return None, False
+    path = Path(str(match.get("path") or ""))
+    expected = str(match.get("signed_sha") or "")
+    if not path.is_file() or not expected or sha256_file(path) != expected:
+        return None, True
+    profile = provision_plist(path)
+    if profile is None or not provision_covers_device(profile, udid):
+        return None, True
+    return path, False
+
+
+def signed_ipa_reusable(path: Path) -> bool:
+    try:
+        info = inspect_ipa(path)
+    except Exception:
+        return False
+    return bool(info["installable"] and info["file_sharing"])
+
+
+def remember_signed_pair(
+    input_sha: str,
+    signed_path: Path,
+    udid: str,
+    apple_id: str,
+    team_id: str,
+) -> None:
+    signed_path = Path(signed_path)
+    record = {
+        "input_sha": input_sha,
+        "signed_sha": sha256_file(signed_path),
+        "path": str(signed_path),
+        "udid": normalize_udid(udid),
+        "apple_id": apple_id.strip().lower(),
+        "team_id": team_id,
+        "created": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+    }
+    key = pair_key(record)
+    kept = [record]
+    removed: list[dict[str, Any]] = []
+    for old in read_signed_index():
+        if pair_key(old) == key:
+            removed.append(old)
+            continue
+        kept.append(old)
+    evicted = kept[MAX_SIGNED_PAIRS:]
+    kept = kept[:MAX_SIGNED_PAIRS]
+    write_signed_index(kept)
+    live = {str(Path(str(item.get("path") or ""))) for item in kept}
+    for old in removed + evicted:
+        path = Path(str(old.get("path") or ""))
+        if str(path) in live or not path.is_file():
+            continue
+        try:
+            path.unlink()
+        except OSError:
+            pass
+
+
+def sign_ipa(ipa: Path, udid: str, device_name: str, out: Path | None = None) -> dict[str, Any]:
     exe = find_signer()
     if exe is None:
         raise RuntimeError(t("signerMissing"))
@@ -172,9 +346,10 @@ def sign_ipa(ipa: Path, udid: str, device_name: str) -> dict[str, Any]:
     anisette = os.environ.get("SELFREFRESH_ANISETTE", "").strip()
     if not apple_id or not password:
         raise RuntimeError(t("needCredentialsQuiet"))
-    out_dir = Path(os.environ.get("LOCALAPPDATA") or Path.home()) / "SelfRefreshSetup" / "signed"
-    out_dir.mkdir(parents=True, exist_ok=True)
-    dest = out_dir / f"{ipa.stem}.signed.ipa"
+    dest_dir = signed_store_dir()
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    dest = out if out is not None else dest_dir / f"{ipa.stem}.signed.ipa"
+    dest.parent.mkdir(parents=True, exist_ok=True)
     request = {
         "apple_id": apple_id,
         "password": password,
@@ -554,13 +729,38 @@ async def run_setup(ipa: Path, udid: str) -> dict[str, Any]:
             else:
                 await lockdown.close()
                 lockdown = None
-                log(t("signingStart"))
-                signed = sign_ipa(ipa, base["udid"], str(device_name))
-                signed_path = Path(str(signed["ipa"]))
+                apple_id = os.environ.get("SELFREFRESH_APPLE_ID", "").strip()
+                input_sha = sha256_file(ipa)
+                cached, stale = lookup_signed_cache(input_sha, base["udid"], apple_id)
+                signed_event: dict[str, Any] | None = None
+                if cached is not None and not signed_ipa_reusable(cached):
+                    cached = None
+                    stale = True
+                if cached is not None:
+                    log(t("signedCacheHit"))
+                    signed_path = cached
+                else:
+                    if stale:
+                        log(t("signedCacheStale"))
+                    log(t("signingStart"))
+                    dest = signed_store_dir() / signed_cache_name(input_sha, base["udid"], apple_id)
+                    signed_event = sign_ipa(ipa, base["udid"], str(device_name), dest)
+                    signed_path = Path(str(signed_event["ipa"]))
                 signed_output = str(signed_path)
                 signed_info = inspect_ipa(signed_path)
                 if not signed_info["installable"] or not signed_info["file_sharing"]:
                     raise RuntimeError(t("signedIncomplete"))
+                if signed_event is not None:
+                    try:
+                        remember_signed_pair(
+                            input_sha,
+                            signed_path,
+                            base["udid"],
+                            apple_id,
+                            str(signed_event.get("team_id") or ""),
+                        )
+                    except OSError as exc:
+                        log(str(exc))
                 if signed_info["bundle_id"] != original_bundle:
                     log(t("bundleChanged", chosen=signed_info["bundle_id"], original=original_bundle))
                 info = signed_info

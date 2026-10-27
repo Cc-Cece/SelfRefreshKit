@@ -1426,5 +1426,54 @@
     "zh-HK": "Apple 拒絕咗今次登入嘅裝置識別。已經換過 Anisette 伺服器，亦清除過儲存嘅狀態。",
     "zh-TW": "Apple 拒絕了這次登入的裝置識別。已經換過 Anisette 伺服器，並清除過儲存的狀態。",
     "ja": "Apple がこのサインイン識別情報を拒否しました。他の Anisette サーバーも試し、保存した状態も消去しました。"
+  },
+  "sessionReused": {
+    "en": "Using the saved Apple session. A password is not sent, and a code is requested only if Apple asks.",
+    "zh-CN": "正在使用已保存的 Apple 登录状态。不会发送密码；只有 Apple 要求时才需要验证码。",
+    "zh-HK": "用緊已儲存嘅 Apple 登入狀態。唔會發送密碼；只有 Apple 要求先需要驗證碼。",
+    "zh-TW": "正在使用已儲存的 Apple 登入狀態。不會傳送密碼；只有 Apple 要求時才需要驗證碼。",
+    "ja": "保存した Apple のセッションを使います。パスワードは送りません。確認コードは Apple が求めたときだけ必要です。"
+  },
+  "sessionRejected": {
+    "en": "The saved Apple session was rejected: {error}",
+    "zh-CN": "已保存的 Apple 登录状态被拒绝：{error}",
+    "zh-HK": "已儲存嘅 Apple 登入狀態被拒絕：{error}",
+    "zh-TW": "已儲存的 Apple 登入狀態被拒絕：{error}",
+    "ja": "保存した Apple のセッションが拒否されました: {error}"
+  },
+  "sessionStateMismatch": {
+    "en": "The saved Apple session does not match this Anisette identity. Sign-in will use the password.",
+    "zh-CN": "已保存的登录状态和当前 Anisette 设备标识不一致，将改用密码登录。",
+    "zh-HK": "已儲存嘅登入狀態同而家嘅 Anisette 裝置識別唔一致，會改用密碼登入。",
+    "zh-TW": "已儲存的登入狀態和目前的 Anisette 裝置識別不一致，將改用密碼登入。",
+    "ja": "保存したセッションが現在の Anisette 識別情報と一致しないため、パスワードでサインインします。"
+  },
+  "sessionUnchecked": {
+    "en": "Could not check the saved Apple session: {error}",
+    "zh-CN": "无法检查已保存的 Apple 登录状态：{error}",
+    "zh-HK": "檢查唔到已儲存嘅 Apple 登入狀態：{error}",
+    "zh-TW": "無法檢查已儲存的 Apple 登入狀態：{error}",
+    "ja": "保存した Apple のセッションを確認できません: {error}"
+  },
+  "sessionSaveFailed": {
+    "en": "Could not save the Apple session.",
+    "zh-CN": "无法保存 Apple 登录状态。",
+    "zh-HK": "儲存唔到 Apple 登入狀態。",
+    "zh-TW": "無法儲存 Apple 登入狀態。",
+    "ja": "Apple のセッションを保存できません。"
+  },
+  "signedCacheHit": {
+    "en": "This IPA was signed for this iPhone before. Installing the saved package.",
+    "zh-CN": "这个安装包以前已为这台 iPhone 签过名，直接安装已保存的包。",
+    "zh-HK": "呢個安裝包之前已為呢部 iPhone 簽過名，直接安裝已儲存嘅包。",
+    "zh-TW": "這個安裝檔先前已為這台 iPhone 簽過名，直接安裝已儲存的檔案。",
+    "ja": "この IPA は以前この iPhone 向けに署名済みです。保存したパッケージをインストールします。"
+  },
+  "signedCacheStale": {
+    "en": "The saved signed IPA can no longer be installed. Signing again.",
+    "zh-CN": "已保存的签名包不能再安装，正在重新签名。",
+    "zh-HK": "已儲存嘅簽名包唔可以再安裝，重新簽名緊。",
+    "zh-TW": "已儲存的簽名檔不能再安裝，正在重新簽名。",
+    "ja": "保存した署名済み IPA はもうインストールできないため、署名し直します。"
   }
 }

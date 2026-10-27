@@ -80,6 +80,41 @@ final class SelfRefreshKitTests: XCTestCase {
     }
 
     @MainActor
+    func testUsbDropPairingImportsWhenStorageIsOutsideDocuments() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let documents = root.appendingPathComponent("Documents", isDirectory: true)
+        let storage = root.appendingPathComponent("Library", isDirectory: true)
+        let dropFolder = documents.appendingPathComponent("SelfRefreshKit", isDirectory: true)
+        try FileManager.default.createDirectory(at: dropFolder, withIntermediateDirectories: true)
+        let plist: [String: Any] = [
+            "UDID": "00008140-00040D4C0A39801C",
+            "identifier": "HOST-1",
+            "public_key": Data([0x11]),
+            "private_key": Data([0x22])
+        ]
+        let pairingData = try PropertyListSerialization.data(fromPropertyList: plist, format: .xml, options: 0)
+        let dropURL = dropFolder.appendingPathComponent("pairing.mobiledevicepairing")
+        try pairingData.write(to: dropURL)
+
+        let suiteName = "test.selfrefresh.drop.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        let manager = SelfRefreshManager(
+            defaults: defaults,
+            storageDirectory: storage,
+            documentsDirectory: documents
+        )
+
+        XCTAssertTrue(manager.isStep1PairingCompleted)
+        XCTAssertEqual(manager.pairingInspection?.udid, "00008140-00040D4C0A39801C")
+        XCTAssertTrue(manager.pairingInspection?.hasRPPairingKeys ?? false)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: dropURL.path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: dropFolder.path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: manager.pairingFileURL.path))
+        let stored = try Data(contentsOf: manager.pairingFileURL)
+        XCTAssertEqual(stored, pairingData)
+    }
+
+    @MainActor
     func testRequiredStepsAndFullAuthentication() async throws {
         let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         let suiteName = "test.selfrefresh.\(UUID().uuidString)"
@@ -270,6 +305,166 @@ final class SelfRefreshKitTests: XCTestCase {
         XCTAssertTrue(GrandSlamClientIdentity.isRejectedIdentityCode(-80045))
         XCTAssertTrue(GrandSlamClientIdentity.isRejectedIdentityCode(-45061))
         XCTAssertFalse(GrandSlamClientIdentity.isRejectedIdentityCode(-22406))
+    }
+
+    func testBundleInstallIdentityRewritesExactIdentifiersOnly() throws {
+        XCTAssertEqual(
+            BundleInstallIdentity.mappedIdentifier(
+                "com.foo.app",
+                oldMain: "com.foo.app",
+                newMain: "com.foo.app.TEAM"
+            ),
+            "com.foo.app.TEAM"
+        )
+        XCTAssertEqual(
+            BundleInstallIdentity.mappedIdentifier(
+                "com.foo.app.widgets",
+                oldMain: "com.foo.app",
+                newMain: "com.foo.app.TEAM"
+            ),
+            "com.foo.app.TEAM.widgets"
+        )
+        XCTAssertEqual(
+            BundleInstallIdentity.mappedIdentifier(
+                "  com.other.share  ",
+                oldMain: " com.foo.app ",
+                newMain: " com.foo.app.TEAM "
+            ),
+            "com.foo.app.TEAM.share"
+        )
+        XCTAssertEqual(
+            BundleInstallIdentity.mappedIdentifier("", oldMain: "com.foo.app", newMain: "com.foo.app.TEAM"),
+            ""
+        )
+
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("identity-\(UUID().uuidString)")
+        let appURL = root.appendingPathComponent("PicHarbor.app")
+        let appexURL = appURL.appendingPathComponent("PlugIns").appendingPathComponent("Widget.appex")
+        try FileManager.default.createDirectory(at: appexURL, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let appPlist: [String: Any] = [
+            "CFBundleIdentifier": "com.foo.app",
+            "CFBundleDisplayName": "PicHarbor",
+            "CFBundleURLTypes": [
+                ["CFBundleURLName": "com.foo.app", "CFBundleURLSchemes": ["picharbor"]]
+            ],
+            "Unrelated": "prefix-com.foo.app-suffix",
+            "SamePrefix": "com.foo.app.not-exact"
+        ]
+        let appInfoURL = appURL.appendingPathComponent("Info.plist")
+        let binary = try PropertyListSerialization.data(fromPropertyList: appPlist, format: .binary, options: 0)
+        try binary.write(to: appInfoURL)
+
+        try BundleInstallIdentity.align(
+            bundleURL: appURL,
+            from: "com.foo.app",
+            to: "com.foo.app.TEAM",
+            oldMain: "com.foo.app",
+            newMain: "com.foo.app.TEAM"
+        )
+
+        let rewrittenData = try Data(contentsOf: appInfoURL)
+        XCTAssertEqual(String(data: rewrittenData.prefix(5), encoding: .ascii), "<?xml")
+        let rewritten = try XCTUnwrap(
+            PropertyListSerialization.propertyList(from: rewrittenData, format: nil) as? [String: Any]
+        )
+        XCTAssertEqual(rewritten["CFBundleIdentifier"] as? String, "com.foo.app.TEAM")
+        XCTAssertEqual(rewritten["CFBundleDisplayName"] as? String, "PicHarbor")
+        XCTAssertEqual(rewritten["Unrelated"] as? String, "prefix-com.foo.app-suffix")
+        XCTAssertEqual(rewritten["SamePrefix"] as? String, "com.foo.app.not-exact")
+        let urlTypes = try XCTUnwrap(rewritten["CFBundleURLTypes"] as? [[String: Any]])
+        XCTAssertEqual(urlTypes.first?["CFBundleURLName"] as? String, "com.foo.app.TEAM")
+        XCTAssertEqual(urlTypes.first?["CFBundleURLSchemes"] as? [String], ["picharbor"])
+        XCTAssertEqual(try BundleInstallIdentity.bundleIdentifier(at: appURL), "com.foo.app.TEAM")
+
+        let unchanged = try Data(contentsOf: appInfoURL)
+        try BundleInstallIdentity.align(
+            bundleURL: appURL,
+            from: "com.foo.app.TEAM",
+            to: "com.foo.app.TEAM",
+            oldMain: "com.foo.app.TEAM",
+            newMain: "com.foo.app.TEAM"
+        )
+        XCTAssertEqual(try Data(contentsOf: appInfoURL), unchanged)
+
+        let appexPlist: [String: Any] = [
+            "CFBundleIdentifier": "com.foo.app.widgets",
+            "NSExtension": [
+                "NSExtensionAttributes": [
+                    "WKAppBundleIdentifier": "com.foo.app"
+                ]
+            ],
+            "Note": "com.foo.app.widgets.extra"
+        ]
+        let appexInfoURL = appexURL.appendingPathComponent("Info.plist")
+        let appexData = try PropertyListSerialization.data(fromPropertyList: appexPlist, format: .xml, options: 0)
+        try appexData.write(to: appexInfoURL)
+        try BundleInstallIdentity.align(
+            bundleURL: appexURL,
+            from: "com.foo.app.widgets",
+            to: "com.foo.app.TEAM.widgets",
+            oldMain: "com.foo.app",
+            newMain: "com.foo.app.TEAM"
+        )
+        let appexRewritten = try XCTUnwrap(
+            PropertyListSerialization.propertyList(from: Data(contentsOf: appexInfoURL), format: nil) as? [String: Any]
+        )
+        XCTAssertEqual(appexRewritten["CFBundleIdentifier"] as? String, "com.foo.app.TEAM.widgets")
+        XCTAssertEqual(appexRewritten["Note"] as? String, "com.foo.app.widgets.extra")
+        let attributes = try XCTUnwrap(
+            (appexRewritten["NSExtension"] as? [String: Any])?["NSExtensionAttributes"] as? [String: Any]
+        )
+        XCTAssertEqual(attributes["WKAppBundleIdentifier"] as? String, "com.foo.app.TEAM")
+
+        let sameApp = root.appendingPathComponent("Same.app")
+        try FileManager.default.createDirectory(at: sameApp, withIntermediateDirectories: true)
+        let sameInfo = sameApp.appendingPathComponent("Info.plist")
+        let sameBinary = try PropertyListSerialization.data(
+            fromPropertyList: ["CFBundleIdentifier": "com.foo.app.TEAM"],
+            format: .binary,
+            options: 0
+        )
+        try sameBinary.write(to: sameInfo)
+        try BundleInstallIdentity.align(
+            bundleURL: sameApp,
+            from: "com.foo.app.TEAM",
+            to: "com.foo.app.TEAM",
+            oldMain: "com.foo.app.TEAM",
+            newMain: "com.foo.app.TEAM"
+        )
+        XCTAssertEqual(try Data(contentsOf: sameInfo).prefix(6), Data("bplist".utf8))
+
+        XCTAssertThrowsError(
+            try BundleInstallIdentity.align(
+                bundleURL: appURL,
+                from: "com.foo.app.TEAM",
+                to: "com.foo.*",
+                oldMain: "com.foo.app.TEAM",
+                newMain: "com.foo.*"
+            )
+        ) { error in
+            guard case SelfRefreshError.backendOperationFailed = error as? SelfRefreshError else {
+                return XCTFail("unexpected error: \(error)")
+            }
+        }
+    }
+
+    func testProfileCoversDeviceIgnoresDashAndCase() {
+        XCTAssertTrue(BundleInstallIdentity.profileCoversDevice(deviceIDs: [], udid: "anything"))
+        XCTAssertFalse(BundleInstallIdentity.profileCoversDevice(deviceIDs: ["ABC"], udid: " "))
+        XCTAssertTrue(
+            BundleInstallIdentity.profileCoversDevice(
+                deviceIDs: ["00008110-001A2B3C"],
+                udid: "00008110001a2b3c"
+            )
+        )
+        XCTAssertFalse(
+            BundleInstallIdentity.profileCoversDevice(
+                deviceIDs: ["00008110-001A2B3C"],
+                udid: "00008110-001A2B3D"
+            )
+        )
     }
 }
 

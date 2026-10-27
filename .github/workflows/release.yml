@@ -40,4 +40,4 @@ jobs:
           gh release create "${{ github.ref_name }}" `
             "tools/SelfRefreshSetup/dist/SelfRefreshKit.exe" `
             --title "${{ github.ref_name }}" `
-            --notes "SelfRefreshKit Windows first-install tool. One portable exe. It does not need a separate .NET, Rust, or Python install. iTunes or Apple Devices, plus a cable, are still required."
+            --notes "SelfRefreshKit Windows first-install tool. One portable exe. It needs the .NET 10 Desktop Runtime. It does not need a separate Rust or Python install. iTunes or Apple Devices, plus a cable, are still required."
