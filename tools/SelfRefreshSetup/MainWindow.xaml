@@ -1,0 +1,212 @@
+<Window x:Class="SelfRefreshSetup.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:SelfRefreshSetup"
+        Title="SelfRefreshKit"
+        Icon="/Assets/SelfRefreshKit.png"
+        Height="760"
+        Width="1120"
+        MinHeight="680"
+        MinWidth="960"
+        WindowStartupLocation="CenterScreen"
+        Background="#F4F1EC"
+        FontFamily="Segoe UI, Microsoft JhengHei, Microsoft YaHei, Yu Gothic UI"
+        FontSize="14"
+        Foreground="#1C1B19">
+    <Window.Resources>
+        <Style x:Key="Card" TargetType="Border">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="BorderBrush" Value="#E4DFD6"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="12"/>
+            <Setter Property="Padding" Value="16"/>
+            <Setter Property="Margin" Value="0,0,0,12"/>
+        </Style>
+        <Style x:Key="QuietButton" TargetType="Button">
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Foreground" Value="#1C1B19"/>
+            <Setter Property="BorderBrush" Value="#D9D3C8"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="14,8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="8"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource QuietButton}">
+            <Setter Property="Background" Value="#1F6B4A"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderBrush" Value="#1F6B4A"/>
+            <Setter Property="FontSize" Value="15"/>
+            <Setter Property="Padding" Value="18,10"/>
+        </Style>
+    </Window.Resources>
+    <DockPanel Margin="28">
+        <Grid DockPanel.Dock="Top" Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Margin="0,0,16,0">
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="/Assets/SelfRefreshKit.png" Width="36" Height="36" Margin="0,0,12,0"
+                           VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                    <TextBlock Text="SelfRefreshKit" FontSize="28" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                </StackPanel>
+                <TextBlock Margin="0,6,0,0" Foreground="#6B6560" TextWrapping="Wrap"
+                           Text="{local:Loc subtitle}"/>
+            </StackPanel>
+            <ComboBox x:Name="LanguageList" Grid.Column="1" VerticalAlignment="Top"
+                      MinWidth="180" MinHeight="32"
+                      DisplayMemberPath="Label" SelectedValuePath="Code"
+                      SelectionChanged="LanguageList_SelectionChanged"
+                      ToolTip="{local:Loc languageTip}"/>
+        </Grid>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MinWidth="360"/>
+                <ColumnDefinition Width="20"/>
+                <ColumnDefinition Width="*" MinWidth="420"/>
+            </Grid.ColumnDefinitions>
+
+            <Grid Grid.Column="0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <StackPanel Grid.Row="0">
+                    <Border Style="{StaticResource Card}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="{local:Loc ipaSection}" Foreground="#6B6560"/>
+                                <TextBlock x:Name="IpaTitle" Margin="0,4,0,0" FontSize="16" FontWeight="SemiBold" Text="{local:Loc ipaEmpty}"/>
+                                <TextBlock x:Name="IpaDetail" Margin="0,2,0,0" Foreground="#6B6560" TextWrapping="Wrap"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Style="{StaticResource QuietButton}" Content="{local:Loc pickIpa}"
+                                    VerticalAlignment="Center" Click="PickIpa_Click"/>
+                        </Grid>
+                    </Border>
+                    <Border Style="{StaticResource Card}" Margin="0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="{local:Loc deviceSection}" Foreground="#6B6560"/>
+                                <ComboBox x:Name="DeviceList" Margin="0,8,0,0" DisplayMemberPath="Label"
+                                          SelectionChanged="DeviceList_SelectionChanged" MinHeight="32"/>
+                                <TextBlock x:Name="DeviceDetail" Margin="0,6,0,0" Foreground="#6B6560" TextWrapping="Wrap"
+                                           Text="{local:Loc deviceHint}"/>
+                            </StackPanel>
+                            <Button Grid.Column="1" Style="{StaticResource QuietButton}" Content="{local:Loc refresh}"
+                                    VerticalAlignment="Top" Click="RefreshDevices_Click"/>
+                        </Grid>
+                    </Border>
+                    <Border x:Name="TwoFactorCard" Style="{StaticResource Card}" Visibility="Collapsed">
+                        <StackPanel>
+                            <TextBlock x:Name="TwoFactorPrompt" TextWrapping="Wrap" Text="{local:Loc twoFactorDefault}"/>
+                            <Grid Margin="0,8,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="TwoFactorCode" MinHeight="32" MaxLength="12"/>
+                                <Button x:Name="TwoFactorButton" Grid.Column="1" Margin="8,0,0,0"
+                                        Style="{StaticResource PrimaryButton}" Content="{local:Loc submitCode}"
+                                        Click="SubmitTwoFactor_Click"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                    <Grid Margin="0,4,0,12">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Button x:Name="PrimaryButton" Style="{StaticResource PrimaryButton}" Content="{local:Loc primarySign}"
+                                Click="PrimaryButton_Click" HorizontalAlignment="Left" IsEnabled="False"/>
+                        <Button x:Name="PrepareButton" Grid.Column="1" Style="{StaticResource QuietButton}"
+                                Content="{local:Loc prepare}" Click="PrepareButton_Click" IsEnabled="False"
+                                ToolTip="{local:Loc prepareTip}"/>
+                        <Button x:Name="ExportPairingButton" Grid.Row="1" Margin="0,8,0,0"
+                                Style="{StaticResource QuietButton}" Content="{local:Loc export}"
+                                Click="ExportPairing_Click" HorizontalAlignment="Left" IsEnabled="False"
+                                ToolTip="{local:Loc exportTip}"/>
+                    </Grid>
+                </StackPanel>
+                <TextBlock Grid.Row="1" Margin="0,0,0,6" Foreground="#6B6560" Text="{local:Loc logSection}"/>
+                <Border Grid.Row="2" Background="#1C1B19" CornerRadius="12" ClipToBounds="True" MinHeight="96">
+                    <TextBox x:Name="LogBox" AcceptsReturn="True" IsReadOnly="True"
+                             TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"
+                             VerticalAlignment="Stretch" VerticalContentAlignment="Top"
+                             FontFamily="Cascadia Mono, Consolas"
+                             FontSize="12" Background="Transparent" Foreground="#F4F1EC" BorderThickness="0"
+                             Padding="14"/>
+                </Border>
+            </Grid>
+
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Border Grid.Row="0" Style="{StaticResource Card}">
+                    <StackPanel>
+                        <TextBlock Text="{local:Loc savedAccounts}" Foreground="#6B6560"/>
+                        <Grid Margin="0,6,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <ComboBox x:Name="SavedAppleIdList" MinHeight="32" DisplayMemberPath="Label"
+                                      SelectionChanged="SavedAppleId_SelectionChanged"/>
+                            <Button Grid.Column="1" Margin="8,0,0,0" Style="{StaticResource QuietButton}"
+                                    Content="{local:Loc save}" Click="SaveAppleId_Click"
+                                    ToolTip="{local:Loc saveTip}"/>
+                            <Button Grid.Column="2" Margin="8,0,0,0" Style="{StaticResource QuietButton}"
+                                    Content="{local:Loc delete}" Click="DeleteAppleId_Click"
+                                    ToolTip="{local:Loc deleteTip}"/>
+                        </Grid>
+                        <TextBlock Text="{local:Loc appleId}" Foreground="#6B6560"/>
+                        <TextBox x:Name="AppleIdBox" Margin="0,6,0,8" MinHeight="32"/>
+                        <TextBlock Text="{local:Loc password}" Foreground="#6B6560"/>
+                        <PasswordBox x:Name="PasswordBox" Margin="0,6,0,8" MinHeight="32"/>
+                        <TextBlock Text="{local:Loc anisetteLabel}" Foreground="#6B6560"/>
+                        <TextBox x:Name="AnisetteBox" Margin="0,6,0,8" MinHeight="32"
+                                 ToolTip="{local:Loc anisetteTip}"/>
+                        <TextBlock Foreground="#6B6560" TextWrapping="Wrap"
+                                   Text="{local:Loc accountHint}"/>
+                    </StackPanel>
+                </Border>
+                <TextBlock Grid.Row="1" Margin="0,4,0,0" Foreground="#6B6560" TextWrapping="Wrap" VerticalAlignment="Top"
+                           Text="{local:Loc footnote}"/>
+            </Grid>
+        </Grid>
+    </DockPanel>
+</Window>

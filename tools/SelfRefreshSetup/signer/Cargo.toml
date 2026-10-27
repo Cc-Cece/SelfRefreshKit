@@ -1,0 +1,24 @@
+[package]
+name = "selfrefresh-sign"
+version = "0.1.0"
+edition = "2024"
+publish = false
+description = "Sign an unsigned SelfRefreshKit IPA with a free Apple ID"
+
+[dependencies]
+apple-codesign-quick = "0.1.0"
+# `install` stays on because this crate's error type references idevice.
+# USB install is still done by the Python worker, not by this binary.
+isideload = { git = "https://github.com/nab138/isideload", rev = "065e852b2092f1386c88195ea3a6506f6b917742", default-features = false, features = ["fs-storage", "tokio-mt", "install"] }
+plist = "1.8"
+rootcause = "0.12"
+rustls = { version = "0.23", default-features = false, features = ["ring"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"
+zip = { version = "2.4", default-features = false, features = ["deflate"] }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }

@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>Assets\SelfRefreshKit.ico</ApplicationIcon>
+    <RootNamespace>SelfRefreshSetup</RootNamespace>
+    <AssemblyName>SelfRefreshSetup</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="worker.py" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="false" />
+    <Content Include="i18n.py" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="false" />
+    <Content Include="i18n.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" ExcludeFromSingleFile="false" />
+    <EmbeddedResource Include="i18n.json" LogicalName="SelfRefreshSetup.i18n.json" />
+    <Resource Include="Assets\SelfRefreshKit.png" />
+    <Content Include="bundle\selfrefresh-sign.exe"
+             Link="selfrefresh-sign.exe"
+             CopyToPublishDirectory="PreserveNewest"
+             ExcludeFromSingleFile="false"
+             Condition="Exists('bundle\selfrefresh-sign.exe')" />
+    <Content Include="signer\target\release\selfrefresh-sign.exe"
+             Link="selfrefresh-sign.exe"
+             CopyToOutputDirectory="PreserveNewest"
+             ExcludeFromSingleFile="true"
+             Condition="Exists('signer\target\release\selfrefresh-sign.exe') And !Exists('bundle\selfrefresh-sign.exe')" />
+    <Content Include="bundle\python\**\*.*"
+             LinkBase="python"
+             CopyToOutputDirectory="Never"
+             CopyToPublishDirectory="PreserveNewest"
+             ExcludeFromSingleFile="false"
+             Condition="Exists('bundle\python\python.exe')" />
+  </ItemGroup>
+</Project>

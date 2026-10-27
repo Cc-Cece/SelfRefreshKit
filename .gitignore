@@ -1,0 +1,7 @@
+archive/
+tools/SelfRefreshSetup/bin/
+tools/SelfRefreshSetup/obj/
+tools/SelfRefreshSetup/bundle/
+tools/SelfRefreshSetup/dist/
+tools/SelfRefreshSetup/signer/target/
+**/__pycache__/

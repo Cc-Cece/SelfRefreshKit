@@ -1,0 +1,1430 @@
+{
+  "windowTitle": {
+    "en": "SelfRefreshKit",
+    "zh-CN": "SelfRefreshKit",
+    "zh-HK": "SelfRefreshKit",
+    "zh-TW": "SelfRefreshKit",
+    "ja": "SelfRefreshKit"
+  },
+  "heading": {
+    "en": "SelfRefreshKit",
+    "zh-CN": "SelfRefreshKit",
+    "zh-HK": "SelfRefreshKit",
+    "zh-TW": "SelfRefreshKit",
+    "ja": "SelfRefreshKit"
+  },
+  "languageTip": {
+    "en": "Interface language",
+    "zh-CN": "界面语言",
+    "zh-HK": "介面語言",
+    "zh-TW": "介面語言",
+    "ja": "表示言語"
+  },
+  "languageSaveFailed": {
+    "en": "Could not save the language choice.",
+    "zh-CN": "语言选择没有保存。",
+    "zh-HK": "語言選擇冇儲存到。",
+    "zh-TW": "語言選擇沒有儲存。",
+    "ja": "言語の選択を保存できませんでした。"
+  },
+  "subtitle": {
+    "en": "Choose an IPA that uses SelfRefreshKit. Only the bundle ID is read.",
+    "zh-CN": "选择使用 SelfRefreshKit 的 IPA。本窗口只读取 Bundle ID。",
+    "zh-HK": "揀一個用緊 SelfRefreshKit 嘅 IPA。呢個視窗只讀 Bundle ID。",
+    "zh-TW": "選擇使用 SelfRefreshKit 的 IPA。這個視窗只讀取 Bundle ID。",
+    "ja": "SelfRefreshKit を使う IPA を選びます。このウィンドウは Bundle ID だけを読みます。"
+  },
+  "ipaSection": {
+    "en": "IPA",
+    "zh-CN": "安装包",
+    "zh-HK": "安裝包",
+    "zh-TW": "安裝檔",
+    "ja": "IPA"
+  },
+  "ipaEmpty": {
+    "en": "None selected",
+    "zh-CN": "未选择",
+    "zh-HK": "未揀",
+    "zh-TW": "未選擇",
+    "ja": "未選択"
+  },
+  "pickIpa": {
+    "en": "Choose IPA",
+    "zh-CN": "选择 IPA",
+    "zh-HK": "揀 IPA",
+    "zh-TW": "選擇 IPA",
+    "ja": "IPA を選択"
+  },
+  "pickIpaTitle": {
+    "en": "Choose IPA",
+    "zh-CN": "选择 IPA",
+    "zh-HK": "揀 IPA",
+    "zh-TW": "選擇 IPA",
+    "ja": "IPA を選択"
+  },
+  "ipaFilter": {
+    "en": "iOS app (*.ipa)|*.ipa",
+    "zh-CN": "iOS 安装包 (*.ipa)|*.ipa",
+    "zh-HK": "iOS 安裝包 (*.ipa)|*.ipa",
+    "zh-TW": "iOS 安裝檔 (*.ipa)|*.ipa",
+    "ja": "iOS アプリ (*.ipa)|*.ipa"
+  },
+  "deviceSection": {
+    "en": "iPhone",
+    "zh-CN": "iPhone",
+    "zh-HK": "iPhone",
+    "zh-TW": "iPhone",
+    "ja": "iPhone"
+  },
+  "deviceHint": {
+    "en": "Connect a cable. iTunes or Apple Devices is required.",
+    "zh-CN": "用数据线连接。需安装 iTunes 或“Apple 设备”。",
+    "zh-HK": "用線接上。要裝 iTunes 或者「Apple 裝置」。",
+    "zh-TW": "請用傳輸線連接。需安裝 iTunes 或「Apple 裝置」。",
+    "ja": "ケーブルで接続します。iTunes または「Apple デバイス」が必要です。"
+  },
+  "refresh": {
+    "en": "Refresh",
+    "zh-CN": "刷新",
+    "zh-HK": "重新整理",
+    "zh-TW": "重新整理",
+    "ja": "更新"
+  },
+  "twoFactorDefault": {
+    "en": "Enter the code from a trusted device.",
+    "zh-CN": "请输入受信任设备上的验证码。",
+    "zh-HK": "請輸入受信任裝置上嘅驗證碼。",
+    "zh-TW": "請輸入受信任裝置上的驗證碼。",
+    "ja": "信頼済みデバイスの確認コードを入力してください。"
+  },
+  "submitCode": {
+    "en": "Submit code",
+    "zh-CN": "提交验证码",
+    "zh-HK": "提交驗證碼",
+    "zh-TW": "送出驗證碼",
+    "ja": "確認コードを送信"
+  },
+  "logSection": {
+    "en": "Log",
+    "zh-CN": "日志",
+    "zh-HK": "記錄",
+    "zh-TW": "日誌",
+    "ja": "ログ"
+  },
+  "primaryInstall": {
+    "en": "Install and write pairing",
+    "zh-CN": "安装并写入配对",
+    "zh-HK": "安裝並寫入配對",
+    "zh-TW": "安裝並寫入配對",
+    "ja": "インストールしてペアリングを書き込む"
+  },
+  "primarySign": {
+    "en": "Sign, install, and write pairing",
+    "zh-CN": "签名、安装并写入配对",
+    "zh-HK": "簽名、安裝並寫入配對",
+    "zh-TW": "簽名、安裝並寫入配對",
+    "ja": "署名、インストール、ペアリングを書き込む"
+  },
+  "primaryStop": {
+    "en": "Stop",
+    "zh-CN": "停止",
+    "zh-HK": "停止",
+    "zh-TW": "停止",
+    "ja": "停止"
+  },
+  "prepare": {
+    "en": "Save unsigned copy",
+    "zh-CN": "另存未签名副本",
+    "zh-HK": "另存未簽名副本",
+    "zh-TW": "另存未簽名副本",
+    "ja": "未署名コピーを保存"
+  },
+  "prepareTip": {
+    "en": "The copy stays unsigned. Use the main button to sign and install.",
+    "zh-CN": "副本仍未签名。请用主按钮签名并安装。",
+    "zh-HK": "副本仍然未簽名。請用主按鈕簽名同安裝。",
+    "zh-TW": "副本仍未簽名。請用主按鈕簽名並安裝。",
+    "ja": "コピーは未署名のままです。署名とインストールはメインボタンを使います。"
+  },
+  "export": {
+    "en": "Export pairing file",
+    "zh-CN": "导出配对文件",
+    "zh-HK": "匯出配對檔",
+    "zh-TW": "匯出配對檔",
+    "ja": "ペアリングファイルを書き出す"
+  },
+  "exportTip": {
+    "en": "Save a pairing file from the selected iPhone. Nothing is installed or written to the phone. To use it, put it in the app at Documents/SelfRefreshKit/pairing.mobiledevicepairing.",
+    "zh-CN": "从选中的 iPhone 导出配对文件。不安装，也不写入手机。使用时放到 App 的 Documents/SelfRefreshKit/pairing.mobiledevicepairing。",
+    "zh-HK": "由選中嘅 iPhone 匯出配對檔。唔會安裝，亦唔會寫入手機。要用就放到 App 嘅 Documents/SelfRefreshKit/pairing.mobiledevicepairing。",
+    "zh-TW": "從選取的 iPhone 匯出配對檔。不會安裝，也不會寫入手機。使用時請放到 App 的 Documents/SelfRefreshKit/pairing.mobiledevicepairing。",
+    "ja": "選択した iPhone からペアリングファイルを保存します。インストールも、iPhone への書き込みもしません。使うときは App の Documents/SelfRefreshKit/pairing.mobiledevicepairing に置きます。"
+  },
+  "savedAccounts": {
+    "en": "Saved accounts",
+    "zh-CN": "已保存账号",
+    "zh-HK": "已儲存帳號",
+    "zh-TW": "已儲存帳號",
+    "ja": "保存したアカウント"
+  },
+  "save": {
+    "en": "Save",
+    "zh-CN": "保存",
+    "zh-HK": "儲存",
+    "zh-TW": "儲存",
+    "ja": "保存"
+  },
+  "saveTip": {
+    "en": "Save this Apple ID, password, and Anisette. A blank password keeps the saved one.",
+    "zh-CN": "保存 Apple ID、密码和 Anisette。密码留空则沿用已保存的密码。",
+    "zh-HK": "儲存 Apple ID、密碼同 Anisette。密碼留空就沿用已儲存嘅密碼。",
+    "zh-TW": "儲存 Apple ID、密碼和 Anisette。密碼留空則沿用已儲存的密碼。",
+    "ja": "Apple ID、パスワード、Anisette を保存します。パスワードを空にすると、保存済みのパスワードを残します。"
+  },
+  "delete": {
+    "en": "Delete",
+    "zh-CN": "删除",
+    "zh-HK": "刪除",
+    "zh-TW": "刪除",
+    "ja": "削除"
+  },
+  "deleteTip": {
+    "en": "Delete the selected account and its saved password.",
+    "zh-CN": "删除选中账号及其已保存的密码。",
+    "zh-HK": "刪除選中帳號同佢已儲存嘅密碼。",
+    "zh-TW": "刪除選取的帳號及其已儲存的密碼。",
+    "ja": "選択したアカウントと保存したパスワードを削除します。"
+  },
+  "appleId": {
+    "en": "Apple ID",
+    "zh-CN": "Apple ID",
+    "zh-HK": "Apple ID",
+    "zh-TW": "Apple ID",
+    "ja": "Apple ID"
+  },
+  "password": {
+    "en": "Password",
+    "zh-CN": "密码",
+    "zh-HK": "密碼",
+    "zh-TW": "密碼",
+    "ja": "パスワード"
+  },
+  "anisetteLabel": {
+    "en": "Anisette server (optional)",
+    "zh-CN": "Anisette 服务器（可留空）",
+    "zh-HK": "Anisette 伺服器（可留空）",
+    "zh-TW": "Anisette 伺服器（可留空）",
+    "ja": "Anisette サーバー（空欄可）"
+  },
+  "anisetteTip": {
+    "en": "Leave blank to use https://ani.sidestore.io. Saved separately for each account.",
+    "zh-CN": "留空则使用 https://ani.sidestore.io。按账号分别保存。",
+    "zh-HK": "留空就用 https://ani.sidestore.io。每個帳號分開儲存。",
+    "zh-TW": "留空則使用 https://ani.sidestore.io。每個帳號分別儲存。",
+    "ja": "空欄のときは https://ani.sidestore.io を使います。アカウントごとに保存します。"
+  },
+  "accountHint": {
+    "en": "Multiple accounts can be saved. Switching fills in that Apple ID, password, and Anisette. The password is encrypted for this Windows user and is not written to the log or the command line. Verification codes are not saved.",
+    "zh-CN": "可保存多个账号。切换时填入该账号的 Apple ID、密码和 Anisette。密码按当前 Windows 用户加密，不写入日志或命令行。不保存验证码。",
+    "zh-HK": "可以儲存多個帳號。切換時會填返該帳號嘅 Apple ID、密碼同 Anisette。密碼用而家呢個 Windows 用戶加密，唔會寫入記錄或者命令列。唔會儲存驗證碼。",
+    "zh-TW": "可儲存多個帳號。切換時會填入該帳號的 Apple ID、密碼和 Anisette。密碼以目前的 Windows 使用者加密，不會寫入日誌或命令列。不儲存驗證碼。",
+    "ja": "複数のアカウントを保存できます。切り替えると、その Apple ID、パスワード、Anisette が入ります。パスワードはこの Windows ユーザーで暗号化され、ログやコマンドラインには書きません。確認コードは保存しません。"
+  },
+  "footnote": {
+    "en": "Renew every 7 days on the iPhone with LocalDevVPN, StosVPN, or WireGuard. Developer Mode, unlock, and Trust This Computer stay on the iPhone. At the free App ID limit, the error is shown and nothing is deleted. At the certificate limit, the earliest certificate is revoked once.",
+    "zh-CN": "之后每 7 天在手机上续签，使用 LocalDevVPN、StosVPN 或 WireGuard。开发者模式、解锁和“信任此电脑”在手机上确认。App ID 达到上限时只提示，不删除。开发证书达到上限时，撤销一张最早到期的。",
+    "zh-HK": "之後每 7 日喺手機度續簽，用 LocalDevVPN、StosVPN 或者 WireGuard。開發者模式、解鎖同「信任呢部電腦」要喺手機度確認。App ID 到上限只會提示，唔會刪除。開發憑證到上限時，會撤銷一張最早到期嘅。",
+    "zh-TW": "之後每 7 天在 iPhone 上續簽，請使用 LocalDevVPN、StosVPN 或 WireGuard。開發者模式、解鎖和「信任這部電腦」要在 iPhone 上確認。免費帳號的 App ID 達到上限時只會提示，不會刪除。開發憑證達到上限時，會撤銷一張最早到期的。",
+    "ja": "その後 7 日ごとの更新は iPhone 上で行います。LocalDevVPN、StosVPN、または WireGuard を使います。デベロッパモード、ロック解除、「このコンピュータを信頼」は iPhone で確認します。無料アカウントの App ID が上限に達したら通知するだけで、削除はしません。開発用証明書が上限に達したら、期限が最も早い証明書を 1 枚取り消します。"
+  },
+  "ready": {
+    "en": "Ready. An unsigned IPA is signed first. Setup is complete only after install and the pairing file is written.",
+    "zh-CN": "窗口已就绪。未签名的包会先签名。安装并写入配对文件后才算完成。",
+    "zh-HK": "視窗準備好。未簽名嘅包裝會先簽名。安裝並寫入配對檔之後先算完成。",
+    "zh-TW": "視窗已就緒。未簽名的安裝檔會先簽名。安裝並寫入配對檔後才算完成。",
+    "ja": "準備ができました。未署名の IPA は先に署名します。インストールとペアリングファイルの書き込みが終わると完了です。"
+  },
+  "stopped": {
+    "en": "Stopped.",
+    "zh-CN": "已停止。",
+    "zh-HK": "停咗。",
+    "zh-TW": "已停止。",
+    "ja": "停止しました。"
+  },
+  "started": {
+    "en": "Starting. Keep the iPhone unlocked.",
+    "zh-CN": "开始。请保持 iPhone 解锁。",
+    "zh-HK": "開始。請保持 iPhone 解鎖。",
+    "zh-TW": "開始。請保持 iPhone 解鎖。",
+    "ja": "開始します。iPhone のロックを解除したままにしてください。"
+  },
+  "exporting": {
+    "en": "Exporting the pairing file. Keep the iPhone unlocked. Nothing is installed or written to the phone.",
+    "zh-CN": "正在导出配对文件。请保持 iPhone 解锁。这一步不安装，也不写入手机。",
+    "zh-HK": "匯出緊配對檔。請保持 iPhone 解鎖。呢一步唔會安裝，亦唔會寫入手機。",
+    "zh-TW": "正在匯出配對檔。請保持 iPhone 解鎖。這一步不會安裝，也不會寫入手機。",
+    "ja": "ペアリングファイルを書き出しています。iPhone のロックを解除したままにしてください。インストールも、iPhone への書き込みもしません。"
+  },
+  "noResult": {
+    "en": "No result.",
+    "zh-CN": "没有得到结果。",
+    "zh-HK": "冇結果。",
+    "zh-TW": "沒有取得結果。",
+    "ja": "結果がありません。"
+  },
+  "done": {
+    "en": "Done.",
+    "zh-CN": "完成。",
+    "zh-HK": "完成。",
+    "zh-TW": "完成。",
+    "ja": "完了。"
+  },
+  "notDone": {
+    "en": "Not finished.",
+    "zh-CN": "没有完成。",
+    "zh-HK": "未完成。",
+    "zh-TW": "未完成。",
+    "ja": "完了していません。"
+  },
+  "localCopy": {
+    "en": "Copy on this PC: {path}",
+    "zh-CN": "电脑上的副本：{path}",
+    "zh-HK": "呢部電腦上嘅副本：{path}",
+    "zh-TW": "這台電腦上的副本：{path}",
+    "ja": "この PC 上のコピー: {path}"
+  },
+  "outputFile": {
+    "en": "File: {path}",
+    "zh-CN": "文件：{path}",
+    "zh-HK": "檔案：{path}",
+    "zh-TW": "檔案：{path}",
+    "ja": "ファイル: {path}"
+  },
+  "workerMissing": {
+    "en": "worker.py was not found. Run from the project directory.",
+    "zh-CN": "找不到 worker.py。请从项目目录运行。",
+    "zh-HK": "搵唔到 worker.py。請喺專案目錄度行。",
+    "zh-TW": "找不到 worker.py。請從專案目錄執行。",
+    "ja": "worker.py が見つかりません。プロジェクトのディレクトリから実行してください。"
+  },
+  "pythonStartFailed": {
+    "en": "Could not start Python 3.11: {error}",
+    "zh-CN": "无法启动 Python 3.11：{error}",
+    "zh-HK": "開唔到 Python 3.11：{error}",
+    "zh-TW": "無法啟動 Python 3.11：{error}",
+    "ja": "Python 3.11 を起動できません: {error}"
+  },
+  "pythonInstallHint": {
+    "en": "Install Python 3.11, then run: py -3.11 -m pip install pymobiledevice3==11.45.0",
+    "zh-CN": "请先安装 Python 3.11，然后执行：py -3.11 -m pip install pymobiledevice3==11.45.0",
+    "zh-HK": "請先裝 Python 3.11，然後執行：py -3.11 -m pip install pymobiledevice3==11.45.0",
+    "zh-TW": "請先安裝 Python 3.11，然後執行：py -3.11 -m pip install pymobiledevice3==11.45.0",
+    "ja": "Python 3.11 をインストールしてから、次を実行してください: py -3.11 -m pip install pymobiledevice3==11.45.0"
+  },
+  "timedOut": {
+    "en": "Timed out. Stopped.",
+    "zh-CN": "等待超时，已停止。",
+    "zh-HK": "等得太耐，停咗。",
+    "zh-TW": "等待逾時，已停止。",
+    "ja": "待機がタイムアウトしたため、停止しました。"
+  },
+  "badResult": {
+    "en": "Could not read the result.",
+    "zh-CN": "结果无法读取。",
+    "zh-HK": "讀唔到結果。",
+    "zh-TW": "無法讀取結果。",
+    "ja": "結果を読み取れませんでした。"
+  },
+  "deleteNone": {
+    "en": "Select an account to delete.",
+    "zh-CN": "请先在列表里选择要删除的账号。",
+    "zh-HK": "請先喺清單度揀要刪除嘅帳號。",
+    "zh-TW": "請先在清單中選擇要刪除的帳號。",
+    "ja": "削除するアカウントを一覧から選んでください。"
+  },
+  "deleted": {
+    "en": "Removed from the list.",
+    "zh-CN": "已从列表删除。",
+    "zh-HK": "已喺清單度刪除。",
+    "zh-TW": "已從清單刪除。",
+    "ja": "一覧から削除しました。"
+  },
+  "accountsUnreadable": {
+    "en": "Saved accounts could not be read. Starting with an empty list.",
+    "zh-CN": "已保存的账号无法读取，这次从空列表开始。",
+    "zh-HK": "讀唔到已儲存嘅帳號，今次由空白清單開始。",
+    "zh-TW": "無法讀取已儲存的帳號，這次從空白清單開始。",
+    "ja": "保存したアカウントを読み取れません。空の一覧から始めます。"
+  },
+  "appleIdEmail": {
+    "en": "Apple ID must be an email address.",
+    "zh-CN": "Apple ID 需要是邮箱。",
+    "zh-HK": "Apple ID 要係電郵。",
+    "zh-TW": "Apple ID 必須是電子郵件。",
+    "ja": "Apple ID はメールアドレスである必要があります。"
+  },
+  "anisetteScheme": {
+    "en": "The Anisette URL must start with http:// or https://.",
+    "zh-CN": "Anisette 地址需要以 http:// 或 https:// 开头。",
+    "zh-HK": "Anisette 網址要以 http:// 或者 https:// 開頭。",
+    "zh-TW": "Anisette 網址必須以 http:// 或 https:// 開頭。",
+    "ja": "Anisette の URL は http:// または https:// で始めてください。"
+  },
+  "passwordProtectFailed": {
+    "en": "Could not encrypt the password. The account was not saved.",
+    "zh-CN": "密码加密失败，这个账号没有保存。",
+    "zh-HK": "密碼加密失敗，呢個帳號冇儲存。",
+    "zh-TW": "密碼加密失敗，這個帳號沒有儲存。",
+    "ja": "パスワードを暗号化できませんでした。アカウントは保存されていません。"
+  },
+  "savedWithPassword": {
+    "en": "Account saved, including the password.",
+    "zh-CN": "已保存这个账号，包括密码。",
+    "zh-HK": "已儲存呢個帳號，包括密碼。",
+    "zh-TW": "已儲存這個帳號，包括密碼。",
+    "ja": "アカウントを保存しました。パスワードも含みます。"
+  },
+  "savedKeptPassword": {
+    "en": "Account saved. The previous password was kept.",
+    "zh-CN": "已保存这个账号。密码沿用上次保存的。",
+    "zh-HK": "已儲存呢個帳號。密碼沿用上次儲存嘅。",
+    "zh-TW": "已儲存這個帳號。密碼沿用上次儲存的。",
+    "ja": "アカウントを保存しました。以前のパスワードを残しています。"
+  },
+  "savedNoPassword": {
+    "en": "Account saved. No password was entered.",
+    "zh-CN": "已保存这个账号。这次没有填写密码。",
+    "zh-HK": "已儲存呢個帳號。今次冇填密碼。",
+    "zh-TW": "已儲存這個帳號。這次沒有填寫密碼。",
+    "ja": "アカウントを保存しました。パスワードは入力されていません。"
+  },
+  "passwordUnlockFailed": {
+    "en": "This password cannot be opened on this PC. Enter it again and save.",
+    "zh-CN": "这个账号的密码在这台电脑上无法解密。请重新输入并保存。",
+    "zh-HK": "呢個帳號嘅密碼喺呢部電腦解唔開。請重新輸入再儲存。",
+    "zh-TW": "這個帳號的密碼在這台電腦上無法解密。請重新輸入並儲存。",
+    "ja": "このパスワードはこの PC では復号できません。入力し直して保存してください。"
+  },
+  "accountWriteFailed": {
+    "en": "The account was not saved.",
+    "zh-CN": "账号没有保存。",
+    "zh-HK": "帳號冇儲存。",
+    "zh-TW": "帳號沒有儲存。",
+    "ja": "アカウントは保存されませんでした。"
+  },
+  "needCredentials": {
+    "en": "An unsigned IPA needs an Apple ID and password.",
+    "zh-CN": "未签名的安装包需要 Apple ID 和密码。",
+    "zh-HK": "未簽名嘅安裝包要有 Apple ID 同密碼。",
+    "zh-TW": "未簽名的安裝檔需要 Apple ID 和密碼。",
+    "ja": "未署名の IPA には Apple ID とパスワードが必要です。"
+  },
+  "passwordSaved": {
+    "en": "password saved",
+    "zh-CN": "已存密码",
+    "zh-HK": "已存密碼",
+    "zh-TW": "已存密碼",
+    "ja": "パスワード保存済み"
+  },
+  "trusted": {
+    "en": "Trusted",
+    "zh-CN": "已信任",
+    "zh-HK": "已信任",
+    "zh-TW": "已信任",
+    "ja": "信頼済み"
+  },
+  "notTrusted": {
+    "en": "Not trusted yet",
+    "zh-CN": "尚未信任",
+    "zh-HK": "未信任",
+    "zh-TW": "尚未信任",
+    "ja": "未信頼"
+  },
+  "noDevices": {
+    "en": "No device found. Connect a cable, and install iTunes or Apple Devices.",
+    "zh-CN": "没有发现设备。请用数据线连接，并安装 iTunes 或“Apple 设备”。",
+    "zh-HK": "搵唔到裝置。請用線接上，並裝 iTunes 或者「Apple 裝置」。",
+    "zh-TW": "找不到裝置。請用傳輸線連接，並安裝 iTunes 或「Apple 裝置」。",
+    "ja": "デバイスが見つかりません。ケーブルで接続し、iTunes または「Apple デバイス」をインストールしてください。"
+  },
+  "ipaReading": {
+    "en": "Reading…",
+    "zh-CN": "正在读取…",
+    "zh-HK": "讀取緊…",
+    "zh-TW": "正在讀取…",
+    "ja": "読み取り中…"
+  },
+  "ipaReadFailed": {
+    "en": "Could not read the IPA.",
+    "zh-CN": "无法读取安装包。",
+    "zh-HK": "讀唔到安裝包。",
+    "zh-TW": "無法讀取安裝檔。",
+    "ja": "IPA を読み取れませんでした。"
+  },
+  "ipaSigned": {
+    "en": "Signed and ready to install",
+    "zh-CN": "已签名，可以安装",
+    "zh-HK": "已簽名，可以安裝",
+    "zh-TW": "已簽名，可以安裝",
+    "ja": "署名済み。インストールできます"
+  },
+  "ipaUnsigned": {
+    "en": "Unsigned. It will be signed with the Apple ID above",
+    "zh-CN": "未签名，会用上面的 Apple ID 签名后再安装",
+    "zh-HK": "未簽名，會用上面嘅 Apple ID 簽名後先安裝",
+    "zh-TW": "未簽名，會用上方的 Apple ID 簽名後再安裝",
+    "ja": "未署名。上の Apple ID で署名してからインストールします"
+  },
+  "fileSharingOn": {
+    "en": "File sharing on",
+    "zh-CN": "已打开文件共享",
+    "zh-HK": "已開檔案共享",
+    "zh-TW": "已開啟檔案共享",
+    "ja": "ファイル共有はオン"
+  },
+  "fileSharingOff": {
+    "en": "File sharing off",
+    "zh-CN": "未打开文件共享",
+    "zh-HK": "未開檔案共享",
+    "zh-TW": "未開啟檔案共享",
+    "ja": "ファイル共有はオフ"
+  },
+  "exportDialogTitle": {
+    "en": "Export pairing file",
+    "zh-CN": "导出配对文件",
+    "zh-HK": "匯出配對檔",
+    "zh-TW": "匯出配對檔",
+    "ja": "ペアリングファイルを書き出す"
+  },
+  "pairingFilter": {
+    "en": "Pairing file (*.mobiledevicepairing)|*.mobiledevicepairing",
+    "zh-CN": "配对文件 (*.mobiledevicepairing)|*.mobiledevicepairing",
+    "zh-HK": "配對檔 (*.mobiledevicepairing)|*.mobiledevicepairing",
+    "zh-TW": "配對檔 (*.mobiledevicepairing)|*.mobiledevicepairing",
+    "ja": "ペアリングファイル (*.mobiledevicepairing)|*.mobiledevicepairing"
+  },
+  "usbmux": {
+    "en": "Cannot reach Apple device service. Install iTunes or Apple Devices, and start Apple Mobile Device Service.",
+    "zh-CN": "连不上 Apple 的手机服务。请安装 iTunes 或“Apple 设备”，并启动 Apple Mobile Device Service。",
+    "zh-HK": "連唔上 Apple 嘅手機服務。請裝 iTunes 或者「Apple 裝置」，並啟動 Apple Mobile Device Service。",
+    "zh-TW": "無法連上 Apple 的裝置服務。請安裝 iTunes 或「Apple 裝置」，並啟動 Apple Mobile Device Service。",
+    "ja": "Apple のデバイスサービスに接続できません。iTunes または「Apple デバイス」をインストールし、Apple Mobile Device Service を起動してください。"
+  },
+  "unlock": {
+    "en": "Unlock the iPhone, then try again.",
+    "zh-CN": "请先解锁 iPhone，再试一次。",
+    "zh-HK": "請先解鎖 iPhone，再試一次。",
+    "zh-TW": "請先解鎖 iPhone，再試一次。",
+    "ja": "iPhone のロックを解除してから、もう一度試してください。"
+  },
+  "trustDenied": {
+    "en": "Trust This Computer was denied on the iPhone.",
+    "zh-CN": "iPhone 上拒绝了“信任此电脑”。",
+    "zh-HK": "iPhone 拒絕咗「信任呢部電腦」。",
+    "zh-TW": "iPhone 上拒絕了「信任這部電腦」。",
+    "ja": "iPhone で「このコンピュータを信頼」が拒否されました。"
+  },
+  "trustTimeout": {
+    "en": "Timed out waiting for trust. Unlock the iPhone and tap Trust.",
+    "zh-CN": "等待信任超时。请解锁 iPhone 并点“信任”。",
+    "zh-HK": "等信任等得太耐。請解鎖 iPhone 再撳「信任」。",
+    "zh-TW": "等待信任逾時。請解鎖 iPhone 並點選「信任」。",
+    "ja": "信頼の確認がタイムアウトしました。iPhone のロックを解除し、「信頼」をタップしてください。"
+  },
+  "appMissing": {
+    "en": "This app is not on the iPhone.",
+    "zh-CN": "iPhone 上还没有这个 App。",
+    "zh-HK": "iPhone 上未有呢個 App。",
+    "zh-TW": "iPhone 上還沒有這個 App。",
+    "ja": "この App は iPhone にありません。"
+  },
+  "notTrustedYet": {
+    "en": "Not trusted yet",
+    "zh-CN": "尚未信任这台电脑",
+    "zh-HK": "未信任呢部電腦",
+    "zh-TW": "尚未信任這部電腦",
+    "ja": "このコンピュータは未信頼"
+  },
+  "unlockShort": {
+    "en": "Unlock the iPhone",
+    "zh-CN": "请先解锁 iPhone",
+    "zh-HK": "請先解鎖 iPhone",
+    "zh-TW": "請先解鎖 iPhone",
+    "ja": "iPhone のロックを解除してください"
+  },
+  "noInfoPlist": {
+    "en": "The IPA has no Payload/*.app/Info.plist.",
+    "zh-CN": "IPA 里没有 Payload/*.app/Info.plist。",
+    "zh-HK": "IPA 入面冇 Payload/*.app/Info.plist。",
+    "zh-TW": "IPA 中沒有 Payload/*.app/Info.plist。",
+    "ja": "IPA に Payload/*.app/Info.plist がありません。"
+  },
+  "ipaNotFound": {
+    "en": "IPA not found: {path}",
+    "zh-CN": "找不到安装包：{path}",
+    "zh-HK": "搵唔到安裝包：{path}",
+    "zh-TW": "找不到安裝檔：{path}",
+    "ja": "IPA が見つかりません: {path}"
+  },
+  "noBundleId": {
+    "en": "Info.plist has no CFBundleIdentifier.",
+    "zh-CN": "Info.plist 里没有 CFBundleIdentifier。",
+    "zh-HK": "Info.plist 入面冇 CFBundleIdentifier。",
+    "zh-TW": "Info.plist 中沒有 CFBundleIdentifier。",
+    "ja": "Info.plist に CFBundleIdentifier がありません。"
+  },
+  "prepareSigned": {
+    "en": "This IPA is already signed. It was not saved, because changing Info.plist would break the signature.",
+    "zh-CN": "这个 IPA 已有签名。没有另存，因为修改 Info.plist 会破坏签名。",
+    "zh-HK": "呢個 IPA 已經有簽名。冇另存，因為改 Info.plist 會破壞簽名。",
+    "zh-TW": "這個 IPA 已有簽名。沒有另存，因為修改 Info.plist 會破壞簽名。",
+    "ja": "この IPA は署名済みです。Info.plist を変えると署名が壊れるため、保存しませんでした。"
+  },
+  "prepareBad": {
+    "en": "The saved copy does not have file sharing.",
+    "zh-CN": "另存的安装包没有打开文件共享。",
+    "zh-HK": "另存嘅安裝包冇開檔案共享。",
+    "zh-TW": "另存的安裝檔沒有開啟檔案共享。",
+    "ja": "保存したコピーでファイル共有が有効になっていません。"
+  },
+  "prepareOk": {
+    "en": "Saved an unsigned copy with file sharing on. It is still unsigned. The main button signs it and installs it.",
+    "zh-CN": "已另存未签名副本，并打开了文件共享。副本仍未签名。主按钮会签名并安装。",
+    "zh-HK": "已另存未簽名副本，並開咗檔案共享。副本仍然未簽名。主按鈕會簽名並安裝。",
+    "zh-TW": "已另存未簽名副本，並開啟了檔案共享。副本仍未簽名。主按鈕會簽名並安裝。",
+    "ja": "ファイル共有を有効にした未署名コピーを保存しました。まだ未署名です。メインボタンが署名してインストールします。"
+  },
+  "signerMissing": {
+    "en": "selfrefresh-sign.exe was not found. In tools/SelfRefreshSetup/signer, run cargo build --release, then build this window again.",
+    "zh-CN": "找不到 selfrefresh-sign.exe。请在 tools/SelfRefreshSetup/signer 执行 cargo build --release，然后重新编译这个窗口。",
+    "zh-HK": "搵唔到 selfrefresh-sign.exe。請喺 tools/SelfRefreshSetup/signer 執行 cargo build --release，然後重新編譯呢個視窗。",
+    "zh-TW": "找不到 selfrefresh-sign.exe。請在 tools/SelfRefreshSetup/signer 執行 cargo build --release，然後重新編譯這個視窗。",
+    "ja": "selfrefresh-sign.exe が見つかりません。tools/SelfRefreshSetup/signer で cargo build --release を実行し、このウィンドウをビルドし直してください。"
+  },
+  "signerStartFailed": {
+    "en": "Could not start the signer.",
+    "zh-CN": "无法启动签名程序。",
+    "zh-HK": "開唔到簽名程式。",
+    "zh-TW": "無法啟動簽章程式。",
+    "ja": "署名プログラムを起動できません。"
+  },
+  "needCredentialsQuiet": {
+    "en": "An unsigned IPA needs an Apple ID and password. The password is not written to the log.",
+    "zh-CN": "未签名的安装包需要 Apple ID 和密码。密码不会写入日志。",
+    "zh-HK": "未簽名嘅安裝包要有 Apple ID 同密碼。密碼唔會寫入記錄。",
+    "zh-TW": "未簽名的安裝檔需要 Apple ID 和密碼。密碼不會寫入日誌。",
+    "ja": "未署名の IPA には Apple ID とパスワードが必要です。パスワードはログに書きません。"
+  },
+  "signFailed": {
+    "en": "Signing failed.",
+    "zh-CN": "签名失败。",
+    "zh-HK": "簽名失敗。",
+    "zh-TW": "簽名失敗。",
+    "ja": "署名に失敗しました。"
+  },
+  "signIncomplete": {
+    "en": "Signing did not finish.",
+    "zh-CN": "签名没有完成。",
+    "zh-HK": "簽名未完成。",
+    "zh-TW": "簽名未完成。",
+    "ja": "署名が完了しませんでした。"
+  },
+  "signedAt": {
+    "en": "Signed: {path}",
+    "zh-CN": "已签名：{path}",
+    "zh-HK": "已簽名：{path}",
+    "zh-TW": "已簽名：{path}",
+    "ja": "署名しました: {path}"
+  },
+  "connecting": {
+    "en": "Connecting. If the iPhone asks, tap Trust and keep it unlocked.",
+    "zh-CN": "正在连接。如果 iPhone 弹出“信任此电脑”，请点信任，并保持解锁。",
+    "zh-HK": "連接緊。如果 iPhone 彈「信任呢部電腦」，請撳信任，並保持解鎖。",
+    "zh-TW": "正在連線。如果 iPhone 顯示「信任這部電腦」，請點選信任，並保持解鎖。",
+    "ja": "接続しています。iPhone に確認が出たら「信頼」をタップし、ロックを解除したままにしてください。"
+  },
+  "remoteDone": {
+    "en": "Remote pairing complete.",
+    "zh-CN": "远程配对已完成。",
+    "zh-HK": "遠端配對完成。",
+    "zh-TW": "遠端配對已完成。",
+    "ja": "リモートペアリングが完了しました。"
+  },
+  "gotRp": {
+    "en": "Got the RPPairing record for iOS 17 and later.",
+    "zh-CN": "已得到 iOS 17 及以上使用的 RPPairing。",
+    "zh-HK": "已得到 iOS 17 及以上用嘅 RPPairing。",
+    "zh-TW": "已取得 iOS 17 以上使用的 RPPairing。",
+    "ja": "iOS 17 以降で使う RPPairing を取得しました。"
+  },
+  "gotLockdown": {
+    "en": "Got a Lockdown pairing record.",
+    "zh-CN": "已得到 Lockdown 配对。",
+    "zh-HK": "已得到 Lockdown 配對。",
+    "zh-TW": "已取得 Lockdown 配對。",
+    "ja": "Lockdown ペアリングを取得しました。"
+  },
+  "pushContainerFailed": {
+    "en": "Could not write to the app container. Trying the file-sharing folder.",
+    "zh-CN": "无法写入整个 App 容器，改为尝试文件共享目录。",
+    "zh-HK": "寫唔入成個 App 容器，改試檔案共享資料夾。",
+    "zh-TW": "無法寫入整個 App 容器，改試檔案共享資料夾。",
+    "ja": "App コンテナに書き込めません。ファイル共有フォルダを試します。"
+  },
+  "pushFailed": {
+    "en": "The pairing file was not written into the app. {detail} The Documents folder usually needs file sharing.",
+    "zh-CN": "配对文件没有写入 App。{detail} 文档目录通常需要打开文件共享。",
+    "zh-HK": "配對檔冇寫入 App。{detail} 文件目錄通常要開檔案共享。",
+    "zh-TW": "配對檔沒有寫入 App。{detail} 文件目錄通常需要開啟檔案共享。",
+    "ja": "ペアリングファイルを App に書き込めませんでした。{detail} 書類フォルダには通常、ファイル共有が必要です。"
+  },
+  "attemptContainer": {
+    "en": "Container: {error}",
+    "zh-CN": "整个容器：{error}",
+    "zh-HK": "成個容器：{error}",
+    "zh-TW": "整個容器：{error}",
+    "ja": "コンテナ: {error}"
+  },
+  "attemptDocuments": {
+    "en": "File sharing: {error}",
+    "zh-CN": "文件共享：{error}",
+    "zh-HK": "檔案共享：{error}",
+    "zh-TW": "檔案共享：{error}",
+    "ja": "ファイル共有: {error}"
+  },
+  "installStart": {
+    "en": "Installing the signed IPA.",
+    "zh-CN": "开始安装已签名的 IPA。",
+    "zh-HK": "開始安裝已簽名嘅 IPA。",
+    "zh-TW": "開始安裝已簽名的 IPA。",
+    "ja": "署名済み IPA のインストールを開始します。"
+  },
+  "installProgress": {
+    "en": "Install progress {percent}%",
+    "zh-CN": "安装进度 {percent}%",
+    "zh-HK": "安裝進度 {percent}%",
+    "zh-TW": "安裝進度 {percent}%",
+    "ja": "インストール進行状況 {percent}%"
+  },
+  "installDone": {
+    "en": "Install finished.",
+    "zh-CN": "安装完成。",
+    "zh-HK": "安裝完成。",
+    "zh-TW": "安裝完成。",
+    "ja": "インストールが完了しました。"
+  },
+  "ipaSignedPlan": {
+    "en": "This IPA is signed. It will be installed, then the pairing file will be written.",
+    "zh-CN": "这个 IPA 已签名，将安装后再写入配对。",
+    "zh-HK": "呢個 IPA 已簽名，會安裝後再寫入配對。",
+    "zh-TW": "這個 IPA 已簽名，將安裝後再寫入配對。",
+    "ja": "この IPA は署名済みです。インストールしてからペアリングファイルを書き込みます。"
+  },
+  "ipaUnsignedPlan": {
+    "en": "This IPA is unsigned. If it is not on the iPhone, it will be signed with the Apple ID and installed.",
+    "zh-CN": "这个 IPA 未签名。如果 iPhone 上还没有它，会先用 Apple ID 签名再安装。",
+    "zh-HK": "呢個 IPA 未簽名。如果 iPhone 上未有佢，會先用 Apple ID 簽名再安裝。",
+    "zh-TW": "這個 IPA 未簽名。如果 iPhone 上還沒有它，會先用 Apple ID 簽名再安裝。",
+    "ja": "この IPA は未署名です。iPhone にない場合は、Apple ID で署名してからインストールします。"
+  },
+  "connected": {
+    "en": "Connected to {name} · iOS {ios}",
+    "zh-CN": "已连接 {name} · iOS {ios}",
+    "zh-HK": "已連接 {name} · iOS {ios}",
+    "zh-TW": "已連線 {name} · iOS {ios}",
+    "ja": "{name} に接続しました · iOS {ios}"
+  },
+  "alreadyInstalled": {
+    "en": "This app is already on the iPhone. Only the pairing file will be written.",
+    "zh-CN": "iPhone 上已经有这个 App，只写入配对文件。",
+    "zh-HK": "iPhone 上已經有呢個 App，只寫入配對檔。",
+    "zh-TW": "iPhone 上已經有這個 App，只寫入配對檔。",
+    "ja": "この App はすでに iPhone にあります。ペアリングファイルだけを書き込みます。"
+  },
+  "signingStart": {
+    "en": "This app is not on the iPhone. Signing with the Apple ID.",
+    "zh-CN": "iPhone 上还没有这个 App。开始用 Apple ID 签名。",
+    "zh-HK": "iPhone 上未有呢個 App。開始用 Apple ID 簽名。",
+    "zh-TW": "iPhone 上還沒有這個 App。開始用 Apple ID 簽名。",
+    "ja": "この App は iPhone にありません。Apple ID で署名します。"
+  },
+  "bundleChanged": {
+    "en": "The signed bundle ID is {chosen}. The original was {original}.",
+    "zh-CN": "签名使用的 Bundle ID 是 {chosen}。原来的是 {original}。",
+    "zh-HK": "簽名用嘅 Bundle ID 係 {chosen}。原來係 {original}。",
+    "zh-TW": "簽名使用的 Bundle ID 是 {chosen}。原來的是 {original}。",
+    "ja": "署名に使う Bundle ID は {chosen} です。元は {original} でした。"
+  },
+  "pairingSavedLog": {
+    "en": "Pairing file saved on this PC: {path}",
+    "zh-CN": "配对文件已保存在这台电脑：{path}",
+    "zh-HK": "配對檔已儲存喺呢部電腦：{path}",
+    "zh-TW": "配對檔已儲存在這台電腦：{path}",
+    "ja": "ペアリングファイルをこの PC に保存しました: {path}"
+  },
+  "pushedOk": {
+    "en": "The pairing file is in the app Documents/SelfRefreshKit folder. The app reads it the next time it opens.",
+    "zh-CN": "配对文件已写到 App 的 Documents/SelfRefreshKit。下次打开 App 会读到它。",
+    "zh-HK": "配對檔已寫到 App 嘅 Documents/SelfRefreshKit。下次開 App 就會讀到。",
+    "zh-TW": "配對檔已寫入 App 的 Documents/SelfRefreshKit。下次開啟 App 時會讀取。",
+    "ja": "ペアリングファイルを App の Documents/SelfRefreshKit に書き込みました。次回起動時に読み込まれます。"
+  },
+  "lockdownNote": {
+    "en": "This is a Lockdown record. iOS 17 and later need RPPairing for VPN renewal.",
+    "zh-CN": "这次是 Lockdown 配对。iOS 17 及以上用 VPN 续签时需要 RPPairing。",
+    "zh-HK": "今次係 Lockdown 配對。iOS 17 及以上用 VPN 續簽需要 RPPairing。",
+    "zh-TW": "這次是 Lockdown 配對。iOS 17 以上用 VPN 續簽時需要 RPPairing。",
+    "ja": "これは Lockdown ペアリングです。iOS 17 以降で VPN 更新するには RPPairing が必要です。"
+  },
+  "documentsNote": {
+    "en": "It was written through the file-sharing folder.",
+    "zh-CN": "写入走的是文件共享目录。",
+    "zh-HK": "寫入行嘅係檔案共享資料夾。",
+    "zh-TW": "這次是透過檔案共享資料夾寫入。",
+    "ja": "ファイル共有フォルダ経由で書き込みました。"
+  },
+  "noSharingNote": {
+    "en": "File sharing is off. Files may not show the pairing file, but it is in the app documents.",
+    "zh-CN": "这个包没有打开文件共享。“文件”App 里可能看不到配对文件，App 自己的文档目录里有。",
+    "zh-HK": "呢個包冇開檔案共享。「檔案」App 可能睇唔到配對檔，但 App 自己嘅文件目錄有。",
+    "zh-TW": "這個安裝檔沒有開啟檔案共享。「檔案」App 可能看不到配對檔，但 App 自己的文件目錄裡有。",
+    "ja": "ファイル共有はオフです。「ファイル」App には表示されないことがありますが、App の書類にはあります。"
+  },
+  "exportedLog": {
+    "en": "Pairing file exported: {path}",
+    "zh-CN": "配对文件已导出：{path}",
+    "zh-HK": "配對檔已匯出：{path}",
+    "zh-TW": "配對檔已匯出：{path}",
+    "ja": "ペアリングファイルを書き出しました: {path}"
+  },
+  "exportedOk": {
+    "en": "Pairing file exported. This copy was not written to the iPhone. To use it, put it in the app at Documents/SelfRefreshKit/pairing.mobiledevicepairing.",
+    "zh-CN": "配对文件已导出。这是备用副本，没有写入手机。需要时把它放到 App 的 Documents/SelfRefreshKit/pairing.mobiledevicepairing。",
+    "zh-HK": "配對檔已匯出。呢份係備用副本，冇寫入手機。要用就放到 App 嘅 Documents/SelfRefreshKit/pairing.mobiledevicepairing。",
+    "zh-TW": "配對檔已匯出。這是備用副本，沒有寫入手機。需要時請放到 App 的 Documents/SelfRefreshKit/pairing.mobiledevicepairing。",
+    "ja": "ペアリングファイルを書き出しました。このコピーは iPhone に書き込んでいません。使うときは App の Documents/SelfRefreshKit/pairing.mobiledevicepairing に置きます。"
+  },
+  "unknownCommand": {
+    "en": "Unknown command.",
+    "zh-CN": "未知命令。",
+    "zh-HK": "未知指令。",
+    "zh-TW": "未知命令。",
+    "ja": "不明なコマンドです。"
+  },
+  "rpPublic": {
+    "en": "The remote pairing public key is not 32 bytes.",
+    "zh-CN": "远程配对的公钥不是 32 字节。",
+    "zh-HK": "遠端配對嘅公鑰唔係 32 位元組。",
+    "zh-TW": "遠端配對的公鑰不是 32 位元組。",
+    "ja": "リモートペアリングの公開鍵が 32 バイトではありません。"
+  },
+  "rpPrivate": {
+    "en": "The remote pairing private key is not 32 bytes.",
+    "zh-CN": "远程配对的私钥不是 32 字节。",
+    "zh-HK": "遠端配對嘅私鑰唔係 32 位元組。",
+    "zh-TW": "遠端配對的私鑰不是 32 位元組。",
+    "ja": "リモートペアリングの秘密鍵が 32 バイトではありません。"
+  },
+  "rpMismatch": {
+    "en": "The remote pairing public and private keys do not match.",
+    "zh-CN": "远程配对的公钥和私钥不匹配。",
+    "zh-HK": "遠端配對嘅公鑰同私鑰唔夾。",
+    "zh-TW": "遠端配對的公鑰和私鑰不相符。",
+    "ja": "リモートペアリングの公開鍵と秘密鍵が一致しません。"
+  },
+  "rpRejected": {
+    "en": "The iPhone rejected remote pairing.",
+    "zh-CN": "iPhone 拒绝了远程配对。",
+    "zh-HK": "iPhone 拒絕咗遠端配對。",
+    "zh-TW": "iPhone 拒絕了遠端配對。",
+    "ja": "iPhone がリモートペアリングを拒否しました。"
+  },
+  "rpProof": {
+    "en": "Remote pairing verification failed.",
+    "zh-CN": "远程配对的校验没有通过。",
+    "zh-HK": "遠端配對校驗未通過。",
+    "zh-TW": "遠端配對的驗證沒有通過。",
+    "ja": "リモートペアリングの検証に失敗しました。"
+  },
+  "rpNoRecord": {
+    "en": "Remote pairing left no record.",
+    "zh-CN": "远程配对没有留下记录。",
+    "zh-HK": "遠端配對冇留低記錄。",
+    "zh-TW": "遠端配對沒有留下記錄。",
+    "ja": "リモートペアリングの記録が残りませんでした。"
+  },
+  "noLockdown": {
+    "en": "No Lockdown pairing record.",
+    "zh-CN": "没有得到 Lockdown 配对记录。",
+    "zh-HK": "冇得到 Lockdown 配對記錄。",
+    "zh-TW": "沒有取得 Lockdown 配對記錄。",
+    "ja": "Lockdown ペアリング記録がありません。"
+  },
+  "appIdLimit": {
+    "en": "This free Apple ID has reached the App ID limit. Each app and extension uses one. This tool does not delete existing App IDs.",
+    "zh-CN": "这个免费 Apple ID 的 App ID 已到上限。每个主包和每个扩展各占一个。本工具不会删除已有的 App ID。",
+    "zh-HK": "呢個免費 Apple ID 嘅 App ID 已到上限。每個主包同每個擴充各佔一個。呢個工具唔會刪除現有 App ID。",
+    "zh-TW": "這個免費 Apple ID 的 App ID 已達上限。每個主程式和每個擴充功能各佔一個。這個工具不會刪除現有的 App ID。",
+    "ja": "この無料 Apple ID は App ID の上限に達しています。本体と拡張機能がそれぞれ 1 つを使います。このツールは既存の App ID を削除しません。"
+  },
+  "initReportFailed": {
+    "en": "Could not initialize error reports: {error}",
+    "zh-CN": "错误报告初始化失败：{error}",
+    "zh-HK": "錯誤報告初始化失敗：{error}",
+    "zh-TW": "錯誤報告初始化失敗：{error}",
+    "ja": "エラー報告を初期化できません: {error}"
+  },
+  "usage": {
+    "en": "Usage: selfrefresh-sign probe, or selfrefresh-sign sign (one JSON object on stdin).",
+    "zh-CN": "用法：selfrefresh-sign probe，或 selfrefresh-sign sign（从标准输入读一条 JSON）。",
+    "zh-HK": "用法：selfrefresh-sign probe，或者 selfrefresh-sign sign（由標準輸入讀一條 JSON）。",
+    "zh-TW": "用法：selfrefresh-sign probe，或 selfrefresh-sign sign（從標準輸入讀取一筆 JSON）。",
+    "ja": "使い方: selfrefresh-sign probe、または selfrefresh-sign sign（標準入力に JSON を 1 件）。"
+  },
+  "noAnisette": {
+    "en": "No usable Anisette server. An akd identity is required, not Xcode.",
+    "zh-CN": "没有可用的 Anisette 服务器。需要 akd 标识，不能是 Xcode。",
+    "zh-HK": "冇可用嘅 Anisette 伺服器。需要 akd 識別，唔可以係 Xcode。",
+    "zh-TW": "沒有可用的 Anisette 伺服器。需要 akd 識別，不能是 Xcode。",
+    "ja": "使える Anisette サーバーがありません。Xcode ではなく akd の識別情報が必要です。"
+  },
+  "needAppleId": {
+    "en": "An Apple ID and password are required.",
+    "zh-CN": "需要 Apple ID 和密码。",
+    "zh-HK": "需要 Apple ID 同密碼。",
+    "zh-TW": "需要 Apple ID 和密碼。",
+    "ja": "Apple ID とパスワードが必要です。"
+  },
+  "needUdid": {
+    "en": "The iPhone UDID is required.",
+    "zh-CN": "需要 iPhone 的 UDID。",
+    "zh-HK": "需要 iPhone 嘅 UDID。",
+    "zh-TW": "需要 iPhone 的 UDID。",
+    "ja": "iPhone の UDID が必要です。"
+  },
+  "ipaMissing": {
+    "en": "The IPA was not found.",
+    "zh-CN": "找不到安装包。",
+    "zh-HK": "搵唔到安裝包。",
+    "zh-TW": "找不到安裝檔。",
+    "ja": "IPA が見つかりません。"
+  },
+  "storageDirFailed": {
+    "en": "Could not create the signing data folder.",
+    "zh-CN": "无法创建签名数据目录。",
+    "zh-HK": "開唔到簽名資料資料夾。",
+    "zh-TW": "無法建立簽名資料資料夾。",
+    "ja": "署名データのフォルダを作成できません。"
+  },
+  "loggingIn": {
+    "en": "Signing in to the Apple ID. A code is requested only if Apple asks.",
+    "zh-CN": "正在登录 Apple ID。只有 Apple 要求时才需要验证码。",
+    "zh-HK": "登入緊 Apple ID。只有 Apple 要求先需要驗證碼。",
+    "zh-TW": "正在登入 Apple ID。只有 Apple 要求時才需要驗證碼。",
+    "ja": "Apple ID にサインインしています。確認コードは Apple が求めたときだけ必要です。"
+  },
+  "portalFailed": {
+    "en": "Could not sign in to the developer portal.",
+    "zh-CN": "登录开发者门户失败。",
+    "zh-HK": "登入開發者入口失敗。",
+    "zh-TW": "登入開發者入口網站失敗。",
+    "ja": "開発者ポータルにサインインできません。"
+  },
+  "teamsFailed": {
+    "en": "Could not read the developer team.",
+    "zh-CN": "读取开发团队失败。",
+    "zh-HK": "讀唔到開發團隊。",
+    "zh-TW": "無法讀取開發團隊。",
+    "ja": "開発チームを読み取れません。"
+  },
+  "noTeam": {
+    "en": "This Apple ID has no developer team.",
+    "zh-CN": "这个 Apple ID 没有开发团队。",
+    "zh-HK": "呢個 Apple ID 冇開發團隊。",
+    "zh-TW": "這個 Apple ID 沒有開發團隊。",
+    "ja": "この Apple ID には開発チームがありません。"
+  },
+  "usingTeam": {
+    "en": "Using team {name} ({id}).",
+    "zh-CN": "使用团队 {name}（{id}）。",
+    "zh-HK": "用緊團隊 {name}（{id}）。",
+    "zh-TW": "使用團隊 {name}（{id}）。",
+    "ja": "チーム {name}（{id}）を使います。"
+  },
+  "registerDeviceFailed": {
+    "en": "Could not register this iPhone.",
+    "zh-CN": "注册这台 iPhone 失败。",
+    "zh-HK": "註冊呢部 iPhone 失敗。",
+    "zh-TW": "註冊這台 iPhone 失敗。",
+    "ja": "この iPhone を登録できません。"
+  },
+  "deviceRegistered": {
+    "en": "This iPhone is on the developer device list.",
+    "zh-CN": "这台 iPhone 已在开发设备列表里。",
+    "zh-HK": "呢部 iPhone 已喺開發裝置清單度。",
+    "zh-TW": "這台 iPhone 已在開發裝置清單中。",
+    "ja": "この iPhone は開発デバイス一覧にあります。"
+  },
+  "certFailed": {
+    "en": "Could not get a development certificate.",
+    "zh-CN": "获取开发证书失败。",
+    "zh-HK": "攞唔到開發憑證。",
+    "zh-TW": "無法取得開發憑證。",
+    "ja": "開発用証明書を取得できません。"
+  },
+  "gotCert": {
+    "en": "Got a development certificate.",
+    "zh-CN": "已得到开发证书。",
+    "zh-HK": "已得到開發憑證。",
+    "zh-TW": "已取得開發憑證。",
+    "ja": "開発用証明書を取得しました。"
+  },
+  "openIpaFailed": {
+    "en": "Could not open the IPA.",
+    "zh-CN": "打开 IPA 失败。",
+    "zh-HK": "開唔到 IPA。",
+    "zh-TW": "無法開啟 IPA。",
+    "ja": "IPA を開けません。"
+  },
+  "noBundleInIpa": {
+    "en": "The IPA has no bundle ID.",
+    "zh-CN": "IPA 里没有 Bundle ID。",
+    "zh-HK": "IPA 入面冇 Bundle ID。",
+    "zh-TW": "IPA 中沒有 Bundle ID。",
+    "ja": "IPA に Bundle ID がありません。"
+  },
+  "changeBundleFailed": {
+    "en": "Could not change the bundle ID.",
+    "zh-CN": "修改 Bundle ID 失败。",
+    "zh-HK": "改唔到 Bundle ID。",
+    "zh-TW": "無法變更 Bundle ID。",
+    "ja": "Bundle ID を変更できません。"
+  },
+  "extensionAppIdFailed": {
+    "en": "Could not register an extension App ID.",
+    "zh-CN": "注册扩展的 App ID 失败。",
+    "zh-HK": "註冊擴充嘅 App ID 失敗。",
+    "zh-TW": "註冊擴充功能的 App ID 失敗。",
+    "ja": "拡張機能の App ID を登録できません。"
+  },
+  "mainAppIdMissing": {
+    "en": "The main App ID {id} was not found after registration.",
+    "zh-CN": "注册之后没有找到主 App ID {id}。",
+    "zh-HK": "註冊之後搵唔到主 App ID {id}。",
+    "zh-TW": "註冊之後找不到主 App ID {id}。",
+    "ja": "登録後にメイン App ID {id} が見つかりません。"
+  },
+  "downloadingProfile": {
+    "en": "Downloading the provisioning profile.",
+    "zh-CN": "正在下载描述文件。",
+    "zh-HK": "下載緊描述檔。",
+    "zh-TW": "正在下載描述檔。",
+    "ja": "プロビジョニングプロファイルをダウンロードしています。"
+  },
+  "profileFailed": {
+    "en": "Could not download the main provisioning profile.",
+    "zh-CN": "下载主描述文件失败。",
+    "zh-HK": "下載主描述檔失敗。",
+    "zh-TW": "下載主描述檔失敗。",
+    "ja": "メインのプロビジョニングプロファイルをダウンロードできません。"
+  },
+  "writeInfoFailed": {
+    "en": "Could not write Info.plist.",
+    "zh-CN": "写入 Info.plist 失败。",
+    "zh-HK": "寫唔入 Info.plist。",
+    "zh-TW": "無法寫入 Info.plist。",
+    "ja": "Info.plist を書き込めません。"
+  },
+  "writeExtInfoFailed": {
+    "en": "Could not write an extension Info.plist.",
+    "zh-CN": "写入扩展 Info.plist 失败。",
+    "zh-HK": "寫唔入擴充 Info.plist。",
+    "zh-TW": "無法寫入擴充功能 Info.plist。",
+    "ja": "拡張機能の Info.plist を書き込めません。"
+  },
+  "writeFrameworkInfoFailed": {
+    "en": "Could not write a framework Info.plist.",
+    "zh-CN": "写入 Framework Info.plist 失败。",
+    "zh-HK": "寫唔入 Framework Info.plist。",
+    "zh-TW": "無法寫入 Framework Info.plist。",
+    "ja": "Framework の Info.plist を書き込めません。"
+  },
+  "signing": {
+    "en": "Signing.",
+    "zh-CN": "正在签名。",
+    "zh-HK": "簽名緊。",
+    "zh-TW": "正在簽名。",
+    "ja": "署名しています。"
+  },
+  "packaging": {
+    "en": "Packing the signed IPA.",
+    "zh-CN": "正在打包已签名的 IPA。",
+    "zh-HK": "打包緊已簽名嘅 IPA。",
+    "zh-TW": "正在打包已簽名的 IPA。",
+    "ja": "署名済み IPA をパッケージしています。"
+  },
+  "packageFailed": {
+    "en": "Could not pack the signed IPA.",
+    "zh-CN": "打包已签名 IPA 失败。",
+    "zh-HK": "打包已簽名 IPA 失敗。",
+    "zh-TW": "打包已簽名 IPA 失敗。",
+    "ja": "署名済み IPA をパッケージできません。"
+  },
+  "readRequestFailed": {
+    "en": "Could not read the signing request.",
+    "zh-CN": "读取签名请求失败。",
+    "zh-HK": "讀唔到簽名請求。",
+    "zh-TW": "無法讀取簽名要求。",
+    "ja": "署名リクエストを読み取れません。"
+  },
+  "emptyRequest": {
+    "en": "No signing request was received.",
+    "zh-CN": "没有收到签名请求。",
+    "zh-HK": "冇收到簽名請求。",
+    "zh-TW": "沒有收到簽名要求。",
+    "ja": "署名リクエストを受信しませんでした。"
+  },
+  "requestNotJson": {
+    "en": "The signing request is not JSON.",
+    "zh-CN": "签名请求不是 JSON。",
+    "zh-HK": "簽名請求唔係 JSON。",
+    "zh-TW": "簽名要求不是 JSON。",
+    "ja": "署名リクエストが JSON ではありません。"
+  },
+  "anisetteConnectFailed": {
+    "en": "Could not connect to Anisette.",
+    "zh-CN": "无法连接 Anisette。",
+    "zh-HK": "連唔上 Anisette。",
+    "zh-TW": "無法連線到 Anisette。",
+    "ja": "Anisette に接続できません。"
+  },
+  "anisetteInfoFailed": {
+    "en": "Could not read the Anisette identity.",
+    "zh-CN": "读取 Anisette 标识失败。",
+    "zh-HK": "讀唔到 Anisette 識別。",
+    "zh-TW": "無法讀取 Anisette 識別。",
+    "ja": "Anisette の識別情報を読み取れません。"
+  },
+  "serverNoResponse": {
+    "en": "{url} did not respond. Trying the next server.",
+    "zh-CN": "{url} 没有响应，换下一个。",
+    "zh-HK": "{url} 冇回應，換下一個。",
+    "zh-TW": "{url} 沒有回應，改試下一個。",
+    "ja": "{url} が応答しません。次のサーバーを試します。"
+  },
+  "serverIdentitySkipped": {
+    "en": "The identity from {url} cannot be used. Skipped.",
+    "zh-CN": "{url} 的标识不可用，已跳过。",
+    "zh-HK": "{url} 嘅識別用唔到，已跳過。",
+    "zh-TW": "{url} 的識別無法使用，已跳過。",
+    "ja": "{url} の識別情報は使えないため、スキップしました。"
+  },
+  "usingAnisette": {
+    "en": "Using Anisette {url}.",
+    "zh-CN": "使用 Anisette {url}。",
+    "zh-HK": "用緊 Anisette {url}。",
+    "zh-TW": "使用 Anisette {url}。",
+    "ja": "Anisette {url} を使います。"
+  },
+  "stateCleared": {
+    "en": "The saved Anisette state did not match this sign-in. Cleared it and retrying once.",
+    "zh-CN": "登录标识和已保存的 Anisette 状态不一致，已清除并重试一次。",
+    "zh-HK": "登入識別同已儲存嘅 Anisette 狀態唔夾，已清除並再試一次。",
+    "zh-TW": "登入識別與已儲存的 Anisette 狀態不一致，已清除並重試一次。",
+    "ja": "保存済みの Anisette 状態がこのサインインと一致しません。消去して 1 回再試行します。"
+  },
+  "serverLoginFailed": {
+    "en": "{url} could not sign in. Trying the next Anisette server.",
+    "zh-CN": "{url} 这次不能登录，换下一个 Anisette 服务器。",
+    "zh-HK": "{url} 今次登入唔到，換下一個 Anisette 伺服器。",
+    "zh-TW": "{url} 這次無法登入，改試下一個 Anisette 伺服器。",
+    "ja": "{url} ではサインインできません。次の Anisette サーバーを試します。"
+  },
+  "loginFailed": {
+    "en": "Sign-in failed.",
+    "zh-CN": "登录失败。",
+    "zh-HK": "登入失敗。",
+    "zh-TW": "登入失敗。",
+    "ja": "サインインに失敗しました。"
+  },
+  "loginAppleFailed": {
+    "en": "Could not sign in to the Apple ID.",
+    "zh-CN": "登录 Apple ID 失败。",
+    "zh-HK": "登入 Apple ID 失敗。",
+    "zh-TW": "登入 Apple ID 失敗。",
+    "ja": "Apple ID にサインインできません。"
+  },
+  "smsToTrusted": {
+    "en": "SMS codes are often rejected. Sending the code to a trusted device instead.",
+    "zh-CN": "短信验证码经常被拒绝，改为向受信任设备发送验证码。",
+    "zh-HK": "短訊驗證碼經常被拒絕，改為發去受信任裝置。",
+    "zh-TW": "簡訊驗證碼經常被拒絕，改為向受信任裝置發送驗證碼。",
+    "ja": "SMS の確認コードは拒否されることが多いため、信頼済みデバイスに送ります。"
+  },
+  "unknownToTrusted": {
+    "en": "The verification method is unclear. Sending the code to a trusted device instead.",
+    "zh-CN": "验证方式不明确，改为向受信任设备发送验证码。",
+    "zh-HK": "驗證方式唔清楚，改為發去受信任裝置。",
+    "zh-TW": "驗證方式不明確，改為向受信任裝置發送驗證碼。",
+    "ja": "確認方法が不明なため、信頼済みデバイスに確認コードを送ります。"
+  },
+  "twoFactorUnclearStop": {
+    "en": "Could not determine the verification method. Stopped. Check a trusted device for the code and try again.",
+    "zh-CN": "无法确认验证方式，已停止。请在受信任设备上查看验证码后再试。",
+    "zh-HK": "確認唔到驗證方式，停咗。請喺受信任裝置睇驗證碼再試。",
+    "zh-TW": "無法確認驗證方式，已停止。請在受信任裝置上查看驗證碼後再試。",
+    "ja": "確認方法を特定できません。停止しました。信頼済みデバイスで確認コードを確認してから、もう一度試してください。"
+  },
+  "smsCode": {
+    "en": "Enter the SMS code.",
+    "zh-CN": "请输入短信验证码。",
+    "zh-HK": "請輸入短訊驗證碼。",
+    "zh-TW": "請輸入簡訊驗證碼。",
+    "ja": "SMS の確認コードを入力してください。"
+  },
+  "trustedCode": {
+    "en": "Enter the code from a trusted device.",
+    "zh-CN": "请输入受信任设备上的验证码。",
+    "zh-HK": "請輸入受信任裝置上嘅驗證碼。",
+    "zh-TW": "請輸入受信任裝置上的驗證碼。",
+    "ja": "信頼済みデバイスの確認コードを入力してください。"
+  },
+  "codeRejected": {
+    "en": "{message} The previous code was rejected: {err}",
+    "zh-CN": "{message} 上一次没有通过：{err}",
+    "zh-HK": "{message} 上次未通過：{err}",
+    "zh-TW": "{message} 上一次沒有通過：{err}",
+    "ja": "{message} 前回のコードは拒否されました: {err}"
+  },
+  "waitCodeFailed": {
+    "en": "Could not wait for the verification code.",
+    "zh-CN": "等待验证码失败。",
+    "zh-HK": "等驗證碼失敗。",
+    "zh-TW": "等待驗證碼失敗。",
+    "ja": "確認コードを待てませんでした。"
+  },
+  "readCodeFailed": {
+    "en": "Could not read the verification code.",
+    "zh-CN": "读取验证码失败。",
+    "zh-HK": "讀唔到驗證碼。",
+    "zh-TW": "無法讀取驗證碼。",
+    "ja": "確認コードを読み取れません。"
+  },
+  "certLimitAlready": {
+    "en": "The development certificate limit was reached, and one certificate was already revoked. No further revocation.",
+    "zh-CN": "开发证书已到上限，并且已经撤销过一张，不再继续撤销。",
+    "zh-HK": "開發憑證已到上限，而且已經撤銷過一張，唔會再撤銷。",
+    "zh-TW": "開發憑證已達上限，而且已經撤銷過一張，不再繼續撤銷。",
+    "ja": "開発用証明書が上限に達し、すでに 1 枚取り消しています。これ以上は取り消しません。"
+  },
+  "certLimitNone": {
+    "en": "The development certificate limit was reached, and there is no certificate to revoke.",
+    "zh-CN": "开发证书已到上限，但没有可以撤销的证书。",
+    "zh-HK": "開發憑證已到上限，但冇可以撤銷嘅憑證。",
+    "zh-TW": "開發憑證已達上限，但沒有可以撤銷的憑證。",
+    "ja": "開発用証明書が上限に達しましたが、取り消せる証明書がありません。"
+  },
+  "unknownDevice": {
+    "en": "Unknown device",
+    "zh-CN": "未知设备",
+    "zh-HK": "未知裝置",
+    "zh-TW": "未知裝置",
+    "ja": "不明なデバイス"
+  },
+  "certLimitRevoke": {
+    "en": "The development certificate limit was reached. Revoking the earliest one ({machine}).",
+    "zh-CN": "开发证书已到上限，将撤销最早到期的一张（{machine}）。",
+    "zh-HK": "開發憑證已到上限，會撤銷最早到期嘅一張（{machine}）。",
+    "zh-TW": "開發憑證已達上限，將撤銷最早到期的一張（{machine}）。",
+    "ja": "開発用証明書が上限に達しました。期限が最も早い証明書を取り消します（{machine}）。"
+  },
+  "listAppIdsFailed": {
+    "en": "Could not read App IDs.",
+    "zh-CN": "读取 App ID 失败。",
+    "zh-HK": "讀唔到 App ID。",
+    "zh-TW": "無法讀取 App ID。",
+    "ja": "App ID を読み取れません。"
+  },
+  "reuseAppId": {
+    "en": "Reusing App ID {id}.",
+    "zh-CN": "沿用已有的 App ID {id}。",
+    "zh-HK": "沿用現有 App ID {id}。",
+    "zh-TW": "沿用現有的 App ID {id}。",
+    "ja": "既存の App ID {id} を使います。"
+  },
+  "registeredAppId": {
+    "en": "Registered App ID {id}.",
+    "zh-CN": "已注册 App ID {id}。",
+    "zh-HK": "已註冊 App ID {id}。",
+    "zh-TW": "已註冊 App ID {id}。",
+    "ja": "App ID {id} を登録しました。"
+  },
+  "appIdExists": {
+    "en": "App ID {id} already exists. Reusing it.",
+    "zh-CN": "App ID {id} 已存在，沿用它。",
+    "zh-HK": "App ID {id} 已經存在，沿用佢。",
+    "zh-TW": "App ID {id} 已存在，沿用它。",
+    "ja": "App ID {id} は既にあります。それを使います。"
+  },
+  "tryScoped": {
+    "en": "Could not register {original}. Trying {scoped}.",
+    "zh-CN": "不能注册 {original}，改为尝试 {scoped}。",
+    "zh-HK": "註冊唔到 {original}，改試 {scoped}。",
+    "zh-TW": "無法註冊 {original}，改試 {scoped}。",
+    "ja": "{original} を登録できないため、{scoped} を試します。"
+  },
+  "registerAppIdFailed": {
+    "en": "Could not register the App ID.",
+    "zh-CN": "注册 App ID 失败。",
+    "zh-HK": "註冊 App ID 失敗。",
+    "zh-TW": "註冊 App ID 失敗。",
+    "ja": "App ID を登録できません。"
+  },
+  "downloadExtProfileFailed": {
+    "en": "Could not download the profile for {id}.",
+    "zh-CN": "下载 {id} 的描述文件失败。",
+    "zh-HK": "下載 {id} 嘅描述檔失敗。",
+    "zh-TW": "下載 {id} 的描述檔失敗。",
+    "ja": "{id} のプロファイルをダウンロードできません。"
+  },
+  "parseExtProfileFailed": {
+    "en": "Could not parse an extension profile.",
+    "zh-CN": "解析扩展描述文件失败。",
+    "zh-HK": "解析擴充描述檔失敗。",
+    "zh-TW": "解析擴充功能描述檔失敗。",
+    "ja": "拡張機能のプロファイルを解析できません。"
+  },
+  "noCodeSignature": {
+    "en": "The signed app has no _CodeSignature.",
+    "zh-CN": "签名后没有 _CodeSignature。",
+    "zh-HK": "簽名之後冇 _CodeSignature。",
+    "zh-TW": "簽名後沒有 _CodeSignature。",
+    "ja": "署名後の App に _CodeSignature がありません。"
+  },
+  "noProvision": {
+    "en": "The signed app has no embedded.mobileprovision.",
+    "zh-CN": "签名后没有 embedded.mobileprovision。",
+    "zh-HK": "簽名之後冇 embedded.mobileprovision。",
+    "zh-TW": "簽名後沒有 embedded.mobileprovision。",
+    "ja": "署名後の App に embedded.mobileprovision がありません。"
+  },
+  "readSignedInfoFailed": {
+    "en": "Could not read the signed Info.plist.",
+    "zh-CN": "读取签名后的 Info.plist 失败。",
+    "zh-HK": "讀唔到簽名後嘅 Info.plist。",
+    "zh-TW": "無法讀取簽名後的 Info.plist。",
+    "ja": "署名後の Info.plist を読み取れません。"
+  },
+  "parseSignedInfoFailed": {
+    "en": "Could not parse the signed Info.plist.",
+    "zh-CN": "解析签名后的 Info.plist 失败。",
+    "zh-HK": "解析唔到簽名後嘅 Info.plist。",
+    "zh-TW": "無法解析簽名後的 Info.plist。",
+    "ja": "署名後の Info.plist を解析できません。"
+  },
+  "bundleMismatch": {
+    "en": "The signed bundle ID is {written}. Expected {bundle_id}.",
+    "zh-CN": "签名后的 Bundle ID 是 {written}，预期是 {bundle_id}。",
+    "zh-HK": "簽名後嘅 Bundle ID 係 {written}，預期係 {bundle_id}。",
+    "zh-TW": "簽名後的 Bundle ID 是 {written}，預期是 {bundle_id}。",
+    "ja": "署名後の Bundle ID は {written} です。想定は {bundle_id} です。"
+  },
+  "sharingNotOn": {
+    "en": "File sharing was not enabled in the signed Info.plist.",
+    "zh-CN": "签名后的 Info.plist 没有同时打开文件共享。",
+    "zh-HK": "簽名後嘅 Info.plist 冇同時開檔案共享。",
+    "zh-TW": "簽名後的 Info.plist 沒有同時開啟檔案共享。",
+    "ja": "署名後の Info.plist でファイル共有が有効になっていません。"
+  },
+  "outputDirFailed": {
+    "en": "Could not create the signed IPA folder.",
+    "zh-CN": "无法创建签名输出目录。",
+    "zh-HK": "開唔到簽名輸出資料夾。",
+    "zh-TW": "無法建立簽名輸出資料夾。",
+    "ja": "署名済み IPA のフォルダを作成できません。"
+  },
+  "writeIpaFailed": {
+    "en": "Could not write the signed IPA.",
+    "zh-CN": "无法写入已签名 IPA。",
+    "zh-HK": "寫唔入已簽名 IPA。",
+    "zh-TW": "無法寫入已簽名 IPA。",
+    "ja": "署名済み IPA を書き込めません。"
+  },
+  "noAppName": {
+    "en": "The app has no name.",
+    "zh-CN": "安装包没有名称。",
+    "zh-HK": "安裝包冇名。",
+    "zh-TW": "安裝檔沒有名稱。",
+    "ja": "App に名前がありません。"
+  },
+  "zipFinishFailed": {
+    "en": "Could not finish packing the IPA.",
+    "zh-CN": "完成 IPA 打包失败。",
+    "zh-HK": "完成 IPA 打包失敗。",
+    "zh-TW": "完成 IPA 打包失敗。",
+    "ja": "IPA のパッケージを完了できません。"
+  },
+  "zipDirFailed": {
+    "en": "Could not write an IPA directory.",
+    "zh-CN": "写入 IPA 目录失败。",
+    "zh-HK": "寫唔入 IPA 目錄。",
+    "zh-TW": "無法寫入 IPA 目錄。",
+    "ja": "IPA のディレクトリを書き込めません。"
+  },
+  "readSignedAppFailed": {
+    "en": "Could not read the signed app.",
+    "zh-CN": "读取签名后的 App 失败。",
+    "zh-HK": "讀唔到簽名後嘅 App。",
+    "zh-TW": "無法讀取簽名後的 App。",
+    "ja": "署名後の App を読み取れません。"
+  },
+  "zipFileFailed": {
+    "en": "Could not write a file into the IPA.",
+    "zh-CN": "写入 IPA 文件失败。",
+    "zh-HK": "寫唔入 IPA 檔案。",
+    "zh-TW": "無法寫入 IPA 檔案。",
+    "ja": "IPA にファイルを書き込めません。"
+  },
+  "writeZipContentFailed": {
+    "en": "Could not write IPA contents.",
+    "zh-CN": "写入 IPA 内容失败。",
+    "zh-HK": "寫唔入 IPA 內容。",
+    "zh-TW": "無法寫入 IPA 內容。",
+    "ja": "IPA の内容を書き込めません。"
+  },
+  "readPackFileFailed": {
+    "en": "Could not read a file to pack.",
+    "zh-CN": "读取待打包文件失败。",
+    "zh-HK": "讀唔到待打包檔案。",
+    "zh-TW": "無法讀取待打包檔案。",
+    "ja": "パッケージするファイルを読み取れません。"
+  },
+  "certLimitPrefix": {
+    "en": "The development certificate limit was reached. Revoking the earliest certificate was already tried.",
+    "zh-CN": "开发证书已到上限。已经尝试撤销最早到期的一张。",
+    "zh-HK": "開發憑證已到上限。已經試過撤銷最早到期嘅一張。",
+    "zh-TW": "開發憑證已達上限。已經嘗試撤銷最早到期的一張。",
+    "ja": "開発用証明書が上限に達しました。期限が最も早い証明書の取り消しはすでに試しています。"
+  },
+  "noCodeReceived": {
+    "en": "No verification code was received. Sign-in was cancelled.",
+    "zh-CN": "没有收到验证码，登录已取消。",
+    "zh-HK": "冇收到驗證碼，登入已取消。",
+    "zh-TW": "沒有收到驗證碼，登入已取消。",
+    "ja": "確認コードを受信しなかったため、サインインを取り消しました。"
+  },
+  "signedIncomplete": {
+    "en": "The signed IPA is incomplete, so it was not installed.",
+    "zh-CN": "签名后的安装包不完整，没有安装。",
+    "zh-HK": "簽名後嘅安裝包唔完整，冇安裝。",
+    "zh-TW": "簽名後的安裝檔不完整，沒有安裝。",
+    "ja": "署名済み IPA が不完全なため、インストールしませんでした。"
+  },
+  "anisetteRejected": {
+    "en": "Apple rejected this sign-in identity. Other Anisette servers were tried, and the saved state was cleared.",
+    "zh-CN": "Apple 拒绝了这次登录的设备标识。已经换过 Anisette 服务器，并清除过保存的状态。",
+    "zh-HK": "Apple 拒絕咗今次登入嘅裝置識別。已經換過 Anisette 伺服器，亦清除過儲存嘅狀態。",
+    "zh-TW": "Apple 拒絕了這次登入的裝置識別。已經換過 Anisette 伺服器，並清除過儲存的狀態。",
+    "ja": "Apple がこのサインイン識別情報を拒否しました。他の Anisette サーバーも試し、保存した状態も消去しました。"
+  }
+}
