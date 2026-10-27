@@ -254,19 +254,19 @@ final class SelfRefreshKitTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(AnisetteServerPreset.defaults.count, 4)
     }
 
-    func testGrandSlamClientIdentityReplacesRejectedAppleClients() {
-        let windows = GrandSlamClientIdentity.windowsClientInfo
-        let mac = "<MacBookPro18,3> <macOS;26.6;25F84> <com.apple.AuthKit/1 (com.apple.akd/1.0)>"
-        let xcode = "<MacBookPro18,3> <Mac OS X;13.4.1;22F8> <com.apple.AOSKit/282 (com.apple.dt.Xcode/3594.4.19)>"
-        let android = "<Android> <Android;10> <com.apple.AuthKit/1>"
-        let macUserAgent = "AuthKit/1 (Macintosh; OS X 26.6) (com.apple.dt.Xcode/26.0)"
+    func testGrandSlamClientIdentityKeepsTheAnisetteServersOwnAkdIdentity() {
+        let sidestore = "<MacBookPro13,2> <macOS;13.1;22C65> <com.apple.AuthKit/1 (com.apple.akd/1.0)>"
+        let xcode = "<MacBookPro13,2> <macOS;13.1;22C65> <com.apple.AuthKit/1 (com.apple.dt.Xcode/3594.4.19)>"
+        let serverUserAgent = "akd/1.0 CFNetwork/811.5.4 Darwin/16.7.0"
+        let xcodeUserAgent = "AuthKit/1 (Macintosh; OS X 26.6) (com.apple.dt.Xcode/26.0)"
 
-        XCTAssertEqual(GrandSlamClientIdentity.acceptedClientInfo(from: mac), windows)
-        XCTAssertEqual(GrandSlamClientIdentity.acceptedClientInfo(from: xcode), windows)
-        XCTAssertEqual(GrandSlamClientIdentity.acceptedClientInfo(from: android), windows)
-        XCTAssertEqual(GrandSlamClientIdentity.acceptedClientInfo(from: windows), windows)
-        XCTAssertEqual(GrandSlamClientIdentity.acceptedUserAgent(from: macUserAgent), GrandSlamClientIdentity.akdUserAgent)
-        XCTAssertEqual(GrandSlamClientIdentity.acceptedUserAgent(from: GrandSlamClientIdentity.akdUserAgent), GrandSlamClientIdentity.akdUserAgent)
+        XCTAssertEqual(GrandSlamClientIdentity.acceptedClientInfo(from: sidestore), sidestore)
+        XCTAssertNil(GrandSlamClientIdentity.acceptedClientInfo(from: xcode))
+        XCTAssertNil(GrandSlamClientIdentity.acceptedClientInfo(from: "  "))
+        XCTAssertEqual(GrandSlamClientIdentity.acceptedUserAgent(from: serverUserAgent), serverUserAgent)
+        XCTAssertEqual(GrandSlamClientIdentity.acceptedUserAgent(from: xcodeUserAgent), GrandSlamClientIdentity.fallbackUserAgent)
+        XCTAssertTrue(GrandSlamClientIdentity.isBlockedClientInfo(xcode))
+        XCTAssertFalse(GrandSlamClientIdentity.isBlockedClientInfo(sidestore))
         XCTAssertTrue(GrandSlamClientIdentity.isRejectedIdentityCode(-80045))
         XCTAssertTrue(GrandSlamClientIdentity.isRejectedIdentityCode(-45061))
         XCTAssertFalse(GrandSlamClientIdentity.isRejectedIdentityCode(-22406))

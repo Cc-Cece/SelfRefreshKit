@@ -278,28 +278,32 @@ private final class ProbeStateBox: @unchecked Sendable {
     }
 }
 
-/// Apple rejects Mac, Xcode, and Android GrandSlam identities with -80045 before 2FA.
-/// The Windows iTunes client info and akd user agent are the pair that still completes SRP.
+/// GrandSlam must send the same client info and user agent that provisioned the anisette data.
+/// Apple answers a mismatched or `com.apple.dt.Xcode` identity with HTTP 503 or -80045.
 enum GrandSlamClientIdentity {
-    static let windowsClientInfo = "<PC> <Windows;6.2(0,0);9200> <com.apple.AuthKit/1 (com.apple.iTunes/12.12.4.1)>"
-    static let akdUserAgent = "akd/1.0 CFNetwork/808.1.4"
+    static let fallbackUserAgent = "akd/1.0 CFNetwork/808.1.4"
 
-    static func acceptedClientInfo(from serverValue: String) -> String {
-        containsRejectedMarker(serverValue) ? windowsClientInfo : serverValue
+    static func acceptedClientInfo(from serverValue: String) -> String? {
+        let trimmed = serverValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, !isBlockedClientInfo(trimmed) else { return nil }
+        return trimmed
     }
 
     static func acceptedUserAgent(from serverValue: String) -> String {
-        serverValue.isEmpty || containsRejectedMarker(serverValue) ? akdUserAgent : serverValue
+        let trimmed = serverValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty || trimmed.localizedCaseInsensitiveContains("Xcode") {
+            return fallbackUserAgent
+        }
+        return trimmed
+    }
+
+    static func isBlockedClientInfo(_ value: String) -> Bool {
+        value.localizedCaseInsensitiveContains("com.apple.dt.Xcode")
+            || value.localizedCaseInsensitiveContains("Xcode")
     }
 
     static func isRejectedIdentityCode(_ code: Int) -> Bool {
         code == -80045 || code == -45061
-    }
-
-    private static func containsRejectedMarker(_ value: String) -> Bool {
-        ["Macintosh", "Mac OS", "macOS", "MacBook", "Xcode", "Android"].contains {
-            value.localizedCaseInsensitiveContains($0)
-        }
     }
 }
 
@@ -322,40 +326,105 @@ final class RealSideSignDriverHelper: @unchecked Sendable {
         return servers
     }
 
+    private struct AnisetteClientInfoPayload: Decodable {
+        let clientInfo: String
+        let userAgent: String
+
+        enum CodingKeys: String, CodingKey {
+            case clientInfo = "client_info"
+            case userAgent = "user_agent"
+        }
+    }
+
+    private struct PublishedAnisetteIdentity {
+        let serverURL: URL
+        let clientInfo: String
+        let userAgent: String
+    }
+
     func fetchFreshAnisetteData(primaryURL: URL, reuseSavedADIBlob: Bool = true) async throws -> AnisetteData {
-        let servers = candidateAnisetteServers(primaryURL: primaryURL)
         let deviceUUID = SelfRefreshKeychain.loadOrCreateAnisetteDeviceUUID()
         let savedADIBlob = reuseSavedADIBlob ? SelfRefreshKeychain.loadAnisetteADIBlob() : nil
-        var requestHeaders = AnisetteRequestHeaders()
-        requestHeaders.clientInfo = GrandSlamClientIdentity.windowsClientInfo
-        requestHeaders.userAgent = GrandSlamClientIdentity.akdUserAgent
+        var lastError: Error?
 
+        for server in candidateAnisetteServers(primaryURL: primaryURL) {
+            guard let identity = await publishedAnisetteIdentity(for: server) else { continue }
+            do {
+                return try await fetchAnisetteData(identity: identity, deviceUUID: deviceUUID, existingAdiBlob: savedADIBlob)
+            } catch {
+                lastError = error
+            }
+        }
+
+        if let lastError {
+            throw lastError
+        }
+
+        applyGrandSlamUserAgent(GrandSlamClientIdentity.fallbackUserAgent)
         let (anisetteData, newAdiBlob) = try await AnisetteDataManager.shared.fetchAnisetteDataWithFailover(
-            servers: servers,
+            servers: candidateAnisetteServers(primaryURL: primaryURL),
             identifier: deviceUUID,
-            existingAdiBlob: savedADIBlob,
-            headers: requestHeaders
+            existingAdiBlob: savedADIBlob
         )
-
         if let newAdiBlob {
             try? SelfRefreshKeychain.saveAnisetteADIBlob(newAdiBlob)
         }
-        return presentingAcceptedIdentity(anisetteData)
+        var copy = anisetteData
+        copy.userAgent = GrandSlamClientIdentity.acceptedUserAgent(from: copy.userAgent)
+        return copy
+    }
+
+    /// `GET /v3/client_info` is the identity SideStore sends. A different client info gets HTTP 503.
+    private func publishedAnisetteIdentity(for serverURL: URL) async -> PublishedAnisetteIdentity? {
+        let infoURL = serverURL.appendingPathComponent("v3").appendingPathComponent("client_info")
+        var request = URLRequest(url: infoURL)
+        request.timeoutInterval = 8
+        request.cachePolicy = .reloadIgnoringLocalCacheData
+        guard let (data, response) = try? await URLSession.shared.data(for: request),
+              let http = response as? HTTPURLResponse,
+              (200...299).contains(http.statusCode),
+              let payload = try? JSONDecoder().decode(AnisetteClientInfoPayload.self, from: data),
+              let clientInfo = GrandSlamClientIdentity.acceptedClientInfo(from: payload.clientInfo)
+        else {
+            return nil
+        }
+        return PublishedAnisetteIdentity(
+            serverURL: serverURL,
+            clientInfo: clientInfo,
+            userAgent: GrandSlamClientIdentity.acceptedUserAgent(from: payload.userAgent)
+        )
+    }
+
+    private func fetchAnisetteData(
+        identity: PublishedAnisetteIdentity,
+        deviceUUID: UUID,
+        existingAdiBlob: Data?
+    ) async throws -> AnisetteData {
+        applyGrandSlamUserAgent(identity.userAgent)
+        var requestHeaders = AnisetteRequestHeaders()
+        requestHeaders.clientInfo = identity.clientInfo
+        requestHeaders.userAgent = identity.userAgent
+        let (anisetteData, newAdiBlob) = try await AnisetteDataManager.shared.fetchAnisetteData(
+            mode: .remote(server: identity.serverURL),
+            identifier: deviceUUID,
+            existingAdiBlob: existingAdiBlob,
+            headers: requestHeaders
+        )
+        if let newAdiBlob {
+            try? SelfRefreshKeychain.saveAnisetteADIBlob(newAdiBlob)
+        }
+        var copy = anisetteData
+        copy.clientInfo = identity.clientInfo
+        copy.userAgent = identity.userAgent
+        return copy
     }
 
     /// GrandSlam reads `customHeaders.grandSlam.userAgent`, not the anisette user agent field.
-    func applyAcceptedGrandSlamIdentity() {
+    func applyGrandSlamUserAgent(_ userAgent: String) {
         var headers = DeveloperPortal.shared.customHeaders
-        headers.grandSlam.userAgent = GrandSlamClientIdentity.akdUserAgent
-        headers.appleAuth.userAgent = GrandSlamClientIdentity.akdUserAgent
+        headers.grandSlam.userAgent = userAgent
+        headers.appleAuth.userAgent = userAgent
         DeveloperPortal.shared.customHeaders = headers
-    }
-
-    func presentingAcceptedIdentity(_ data: AnisetteData) -> AnisetteData {
-        var copy = data
-        copy.clientInfo = GrandSlamClientIdentity.acceptedClientInfo(from: copy.clientInfo)
-        copy.userAgent = GrandSlamClientIdentity.acceptedUserAgent(from: copy.userAgent)
-        return copy
     }
 
     func signInToDeveloperPortal(
@@ -364,7 +433,6 @@ final class RealSideSignDriverHelper: @unchecked Sendable {
         twoFactorCode: String?,
         primaryAnisetteURL: URL
     ) async throws -> (session: AuthSession, anisetteData: AnisetteData) {
-        applyAcceptedGrandSlamIdentity()
         let hadSavedADIBlob = SelfRefreshKeychain.loadAnisetteADIBlob() != nil
         do {
             let anisetteData = try await fetchFreshAnisetteData(primaryURL: primaryAnisetteURL)
@@ -376,7 +444,7 @@ final class RealSideSignDriverHelper: @unchecked Sendable {
             )
             return (authSession, anisetteData)
         } catch {
-            guard hadSavedADIBlob, isRejectedGrandSlamIdentity(error) else { throw error }
+            guard hadSavedADIBlob, isRetryableGrandSlamRejection(error) else { throw error }
             try? SelfRefreshKeychain.deleteAnisetteADIBlob()
             AnisetteDataManager.shared.clearCache()
             let anisetteData = try await fetchFreshAnisetteData(
@@ -393,12 +461,19 @@ final class RealSideSignDriverHelper: @unchecked Sendable {
         }
     }
 
-    private func isRejectedGrandSlamIdentity(_ error: Error) -> Bool {
-        guard let serverError = error as? ServerError,
-              case .underlyingError(let code, _) = serverError else {
+    private func isRetryableGrandSlamRejection(_ error: Error) -> Bool {
+        guard let serverError = error as? ServerError else { return false }
+        switch serverError {
+        case .underlyingError(let code, _):
+            return GrandSlamClientIdentity.isRejectedIdentityCode(code)
+        case .invalidResponseFormat(let payload):
+            return payload.localizedCaseInsensitiveContains("503")
+        case .badServerResponse(let reason, let payload):
+            return reason.localizedCaseInsensitiveContains("503")
+                || payload.localizedCaseInsensitiveContains("503")
+        case .missingKey:
             return false
         }
-        return GrandSlamClientIdentity.isRejectedIdentityCode(code)
     }
 
     func authenticateAppleID(
@@ -441,7 +516,6 @@ final class RealSideSignDriverHelper: @unchecked Sendable {
         password: String,
         primaryAnisetteURL: URL
     ) async throws -> (team: Team, session: Session) {
-        applyAcceptedGrandSlamIdentity()
         let anisetteData = try await fetchFreshAnisetteData(primaryURL: primaryAnisetteURL)
 
         if let savedData = try? SelfRefreshKeychain.loadPortalSessionData(),
