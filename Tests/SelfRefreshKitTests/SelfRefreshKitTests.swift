@@ -84,7 +84,19 @@ final class SelfRefreshKitTests: XCTestCase {
         let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         let suiteName = "test.selfrefresh.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!
-        let manager = SelfRefreshManager(defaults: defaults, storageDirectory: tempDir)
+        let expectedSession = AppleAuthSession(
+            appleID: "test_user@icloud.com",
+            teamID: "TEAMID1234",
+            teamName: "Stub Team",
+            sessionToken: "PORTAL-TOKEN-STUB",
+            anisetteSerial: "ANISSETTE-STUB",
+            authenticatedAt: Date(timeIntervalSince1970: 1_700_000_000)
+        )
+        let manager = SelfRefreshManager(
+            driver: StubRefreshDriver(session: expectedSession),
+            defaults: defaults,
+            storageDirectory: tempDir
+        )
 
         XCTAssertEqual(manager.completedRequiredStepsCount, 0)
 
@@ -109,13 +121,23 @@ final class SelfRefreshKitTests: XCTestCase {
             twoFactorCode: "123456",
             anisetteURL: "https://ani.sidestore.io"
         )
-        XCTAssertEqual(session.appleID, "test_user@icloud.com")
-        XCTAssertFalse(session.teamID.isEmpty)
+        XCTAssertEqual(session, expectedSession)
+        XCTAssertEqual(manager.authSession?.teamID, "TEAMID1234")
+        XCTAssertEqual(manager.authSession?.sessionToken, "PORTAL-TOKEN-STUB")
         XCTAssertTrue(manager.isStep2AccountCompleted)
+        XCTAssertFalse(manager.isAwaitingTwoFactor)
 
         let report = await manager.runHealthCheck()
         XCTAssertEqual(report.items.count, 4)
         XCTAssertEqual(report.items.first(where: { $0.id == "pairing" })?.status, .healthy)
+
+        do {
+            try await manager.refreshProfileOnly()
+            XCTFail("Profile refresh must not succeed without a real provisioning profile")
+        } catch {
+            XCTAssertFalse(manager.isLocalCertificateTakenOver)
+            XCTAssertNil(manager.lastRefreshDate)
+        }
     }
 
     func testAllSevenLanguagesHave100PercentKeyParityIncludingAboutAndShortcuts() {
@@ -230,5 +252,54 @@ final class SelfRefreshKitTests: XCTestCase {
             XCTAssertFalse(SelfRefreshProfileIntent.openAppWhenRun)
         }
         XCTAssertGreaterThanOrEqual(AnisetteServerPreset.defaults.count, 4)
+    }
+}
+
+/// Returns a fixed developer session. Profile install and resign fail instead of inventing a 7-day profile.
+private struct StubRefreshDriver: SelfRefreshBackendDriver {
+    let session: AppleAuthSession
+
+    var driverName: String { "Stub Auth Driver" }
+
+    func testLoopbackTunnel(host: String, port: UInt16) async -> Bool { true }
+
+    func inspectPairingFile(data: Data) throws -> PairingFileInspection {
+        try DefaultSelfRefreshDriver().inspectPairingFile(data: data)
+    }
+
+    func probeAnisetteServer(url: URL) async throws -> (headers: [String: String], latencyMs: Int) {
+        (["X-Apple-I-MD": "stub"], 1)
+    }
+
+    func authenticateAppleID(
+        appleID: String,
+        password: String,
+        twoFactorCode: String?,
+        anisetteURL: URL
+    ) async throws -> AppleAuthSession {
+        session
+    }
+
+    func refreshProvisioningProfileOnly(
+        appleID: String,
+        password: String,
+        session: AppleAuthSession?,
+        anisetteURL: URL,
+        pairingData: Data,
+        bundleIdentifier: String
+    ) async throws -> ProvisioningProfileMetadata {
+        throw SelfRefreshError.backendOperationFailed("stub refresh is not a profile install")
+    }
+
+    func resignAndInstallIPA(
+        ipaFileURL: URL,
+        appleID: String,
+        password: String,
+        session: AppleAuthSession?,
+        anisetteURL: URL,
+        pairingData: Data,
+        bundleIdentifier: String
+    ) async throws -> ProvisioningProfileMetadata {
+        throw SelfRefreshError.backendOperationFailed("stub resign is not an install")
     }
 }

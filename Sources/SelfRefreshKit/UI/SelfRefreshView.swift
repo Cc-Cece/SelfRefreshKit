@@ -23,6 +23,7 @@ public struct SelfRefreshSection: View {
             }
         }
         .accessibilityIdentifier("settings.selfRefresh")
+        .selfRefreshTwoFactorPrompt()
     }
 
     private var badgeColor: Color {
@@ -210,6 +211,7 @@ public struct SelfRefreshView: View {
                 SelfRefreshAboutSheet()
             }
         }
+        .selfRefreshTwoFactorPrompt()
     }
 
     private var expirationStatusText: String {
@@ -390,6 +392,7 @@ public struct SelfRefreshRequiredSetupView: View {
                 SelfRefreshAccountSheet()
             }
         }
+        .selfRefreshTwoFactorPrompt()
         .fileImporter(
             isPresented: $isFileImporterPresented,
             allowedContentTypes: [.item, .data],
@@ -672,6 +675,7 @@ public struct SelfRefreshOptionalActionsView: View {
                 SelfRefreshShortcutGuideSheet()
             }
         }
+        .selfRefreshTwoFactorPrompt()
         .fileImporter(
             isPresented: $isFileImporterPresented,
             allowedContentTypes: [.item, .data],
@@ -858,6 +862,7 @@ private struct SelfRefreshAccountSheet: View {
                 password = existing
             }
         }
+        .selfRefreshTwoFactorPrompt()
     }
 }
 
@@ -939,5 +944,117 @@ private struct SelfRefreshAboutSheet: View {
                 Button(manager.localized(.commonDone)) { dismiss() }
             }
         }
+    }
+}
+
+// MARK: - Apple 2FA prompt (login and refresh share one waiting sheet)
+
+private enum TwoFactorPromptStack {
+    private static var ids: [UUID] = []
+
+    static func push(_ id: UUID) {
+        guard !ids.contains(id) else { return }
+        ids.append(id)
+    }
+
+    static func pop(_ id: UUID) {
+        ids.removeAll { $0 == id }
+    }
+
+    static func isTop(_ id: UUID) -> Bool {
+        ids.last == id
+    }
+}
+
+private struct TwoFactorPromptModifier: ViewModifier {
+    @ObservedObject private var manager = SelfRefreshManager.shared
+    @State private var promptID = UUID()
+    @State private var isAttached = false
+
+    func body(content: Content) -> some View {
+        content
+            .onAppear {
+                TwoFactorPromptStack.push(promptID)
+                isAttached = true
+            }
+            .onDisappear {
+                TwoFactorPromptStack.pop(promptID)
+                isAttached = false
+            }
+            .sheet(
+                isPresented: Binding(
+                    get: {
+                        isAttached && manager.isAwaitingTwoFactor && TwoFactorPromptStack.isTop(promptID)
+                    },
+                    set: { presented in
+                        if !presented, manager.isAwaitingTwoFactor, TwoFactorPromptStack.isTop(promptID) {
+                            manager.cancelTwoFactorEntry()
+                        }
+                    }
+                )
+            ) {
+                SelfRefreshTwoFactorSheet()
+            }
+    }
+}
+
+private extension View {
+    func selfRefreshTwoFactorPrompt() -> some View {
+        modifier(TwoFactorPromptModifier())
+    }
+}
+
+/// Shown while SideSign waits for a code. Submit stays enabled during `isAuthenticating`.
+private struct SelfRefreshTwoFactorSheet: View {
+    @ObservedObject private var manager = SelfRefreshManager.shared
+    @State private var code = ""
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    Text(manager.localized(.accountToggle2FA))
+                    TextField(manager.localized(.account2FAPlaceholder), text: $code)
+                        #if os(iOS)
+                        .keyboardType(.numberPad)
+                        #endif
+                        .textContentType(.oneTimeCode)
+                        .accessibilityIdentifier("selfRefresh.twoFactorPromptField")
+                        .onChange(of: code) { newValue in
+                            let digits = String(newValue.filter(\.isNumber).prefix(6))
+                            if digits != newValue {
+                                code = digits
+                            }
+                        }
+                }
+                Section {
+                    Button {
+                        manager.submitTwoFactorCode(code)
+                    } label: {
+                        HStack {
+                            Spacer()
+                            Text(manager.localized(.accountSubmitButton))
+                                .fontWeight(.semibold)
+                            Spacer()
+                        }
+                    }
+                    .disabled(code.filter(\.isNumber).count != 6)
+                    .accessibilityIdentifier("selfRefresh.twoFactorPromptSubmit")
+                }
+            }
+            .navigationTitle(manager.localized(.accountToggle2FA))
+            #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+            #endif
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(manager.localized(.commonCancel)) {
+                        manager.cancelTwoFactorEntry()
+                    }
+                    .accessibilityIdentifier("selfRefresh.twoFactorPromptCancel")
+                }
+            }
+        }
+        .interactiveDismissDisabled(true)
     }
 }

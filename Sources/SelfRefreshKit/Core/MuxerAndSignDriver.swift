@@ -1,6 +1,5 @@
 import Foundation
 import Network
-import CryptoKit
 #if canImport(Darwin)
 import Darwin
 #endif
@@ -13,6 +12,11 @@ import SideSign
 import IDevice
 #endif
 
+/// Propagates whether the current signing call can wait for a user-entered Apple 2FA code.
+enum SelfRefreshAuthContext {
+    @TaskLocal static var interactiveTwoFactor = true
+}
+
 /// Default driver that implements:
 /// 1. Device pairing file inspection (supporting both iOS 17+ RPPairing plist and standard Lockdown plist).
 /// 2. Loopback VPN interface and TCP port probing (probes `10.7.0.1` on port 49152 for iOS 17+ RPPairing and 62078 for Lockdown).
@@ -24,7 +28,7 @@ public struct DefaultSelfRefreshDriver: SelfRefreshBackendDriver {
         #if canImport(SideSign) && canImport(IDevice)
         return "SideSign + IDevice (Native Engine)"
         #else
-        return "Standard Loopback Driver"
+        return "Signing Engine Unavailable"
         #endif
     }
 
@@ -129,12 +133,7 @@ public struct DefaultSelfRefreshDriver: SelfRefreshBackendDriver {
             primaryAnisetteURL: anisetteURL
         )
         #else
-        return try await simulatedAuthenticateAppleID(
-            appleID: normalizedID,
-            password: password,
-            twoFactorCode: twoFactorCode,
-            anisetteURL: anisetteURL
-        )
+        throw SelfRefreshError.backendOperationFailed("未链接 SideSign，无法登录 Apple 开发者账号。")
         #endif
     }
 
@@ -160,14 +159,7 @@ public struct DefaultSelfRefreshDriver: SelfRefreshBackendDriver {
             bundleIdentifier: bundleIdentifier
         )
         #else
-        return try await simulatedRefreshProfile(
-            appleID: appleID,
-            password: password,
-            session: session,
-            anisetteURL: anisetteURL,
-            pairingInfo: pairingInfo,
-            bundleIdentifier: bundleIdentifier
-        )
+        throw SelfRefreshError.backendOperationFailed("未链接 SideSign 与 IDevice，无法在本机安装描述文件。")
         #endif
     }
 
@@ -199,14 +191,7 @@ public struct DefaultSelfRefreshDriver: SelfRefreshBackendDriver {
             bundleIdentifier: bundleIdentifier
         )
         #else
-        return try await simulatedRefreshProfile(
-            appleID: appleID,
-            password: password,
-            session: session,
-            anisetteURL: anisetteURL,
-            pairingInfo: pairingInfo,
-            bundleIdentifier: bundleIdentifier
-        )
+        throw SelfRefreshError.backendOperationFailed("未链接 SideSign 与 IDevice，无法在本机重签并安装 IPA。")
         #endif
     }
 
@@ -277,81 +262,6 @@ public struct DefaultSelfRefreshDriver: SelfRefreshBackendDriver {
         }
     }
 
-    private func simulatedAuthenticateAppleID(
-        appleID: String,
-        password: String,
-        twoFactorCode: String?,
-        anisetteURL: URL
-    ) async throws -> AppleAuthSession {
-        if let code = twoFactorCode, !code.isEmpty {
-            let digitsOnly = code.filter(\.isNumber)
-            guard digitsOnly.count == 6 else {
-                throw SelfRefreshError.invalidTwoFactorCode
-            }
-        }
-        var anisetteHeaders: [String: String] = [:]
-        if let result = try? await probeAnisetteServer(url: anisetteURL) {
-            anisetteHeaders = result.headers
-        } else {
-            for preset in AnisetteServerPreset.defaults {
-                if let fallbackURL = URL(string: preset.url),
-                   let result = try? await probeAnisetteServer(url: fallbackURL) {
-                    anisetteHeaders = result.headers
-                    break
-                }
-            }
-        }
-        let machineID = anisetteHeaders["X-Apple-I-MD-M"] ?? anisetteHeaders["machine_id"] ?? "ANIS-V3-LOCAL"
-        let digest = SHA256.hash(data: Data("\(appleID):\(machineID)".utf8))
-        let hexPrefix = digest.prefix(5).map { String(format: "%02X", $0) }.joined()
-        let teamID = String(hexPrefix.prefix(10))
-        let tokenDigest = SHA256.hash(data: Data("\(appleID):\(password):\(twoFactorCode ?? "SESSION"):v2".utf8))
-        let sessionToken = "GSA-" + tokenDigest.prefix(16).map { String(format: "%02x", $0) }.joined()
-
-        return AppleAuthSession(
-            appleID: appleID,
-            teamID: teamID,
-            teamName: "\(appleID) (Personal Team)",
-            sessionToken: sessionToken,
-            anisetteSerial: String(machineID.prefix(16)),
-            authenticatedAt: Date(),
-            requiresTwoFactor: false
-        )
-    }
-
-    private func simulatedRefreshProfile(
-        appleID: String,
-        password: String,
-        session: AppleAuthSession?,
-        anisetteURL: URL,
-        pairingInfo: PairingFileInspection,
-        bundleIdentifier: String
-    ) async throws -> ProvisioningProfileMetadata {
-        let activeSession: AppleAuthSession
-        if let session {
-            activeSession = session
-        } else {
-            activeSession = try await simulatedAuthenticateAppleID(
-                appleID: appleID,
-                password: password,
-                twoFactorCode: nil,
-                anisetteURL: anisetteURL
-            )
-        }
-        let now = Date()
-        let newExpiration = Calendar.current.date(byAdding: .day, value: 7, to: now) ?? now.addingTimeInterval(7 * 86400)
-        return ProvisioningProfileMetadata(
-            uuid: UUID().uuidString.uppercased(),
-            name: "iOS Team Provisioning Profile: \(bundleIdentifier) (\(pairingInfo.udid.prefix(8)))",
-            appIDName: bundleIdentifier,
-            bundleIdentifier: bundleIdentifier,
-            teamIdentifier: activeSession.teamID,
-            teamName: activeSession.teamName,
-            creationDate: now,
-            expirationDate: newExpiration,
-            certificateSHA1Fingerprints: ["LOCAL-KEYCHAIN-\(activeSession.teamID)"]
-        )
-    }
 }
 
 private final class ProbeStateBox: @unchecked Sendable {
@@ -652,9 +562,9 @@ final class RealSideSignDriverHelper: @unchecked Sendable {
         let signer = AppBundleSigner(team: team, keyStore: keyStore)
         try await signer.signApp(at: appBundleURL, provisioningProfiles: profilesToSign)
 
-        try await IdeviceTunnelBridge.shared.installSignedAppBundle(
-            appBundleURL: appBundleURL,
-            bundleId: bundleIdentifier,
+        let signedIPA = try FileManager.default.zipAppBundle(at: appBundleURL)
+        try await IdeviceTunnelBridge.shared.installSignedIPA(
+            ipaFileURL: signedIPA,
             pairingData: pairingData,
             hasRPPairing: pairingInfo.hasRPPairingKeys
         )
@@ -679,8 +589,9 @@ final class RealSideSignDriverHelper: @unchecked Sendable {
 actor TwoFactorAuthBridge {
     static let shared = TwoFactorAuthBridge()
 
-    private var activeContinuation: CheckedContinuation<TwoFactorResponse, Never>?
-    private var isAwaitingCode = false
+    private var waiter: CheckedContinuation<TwoFactorResponse, Error>?
+    private var prefilledCode: String?
+    private var prefilledUsed = false
 
     private init() {}
 
@@ -690,12 +601,9 @@ actor TwoFactorAuthBridge {
         twoFactorCode: String?,
         anisetteData: AnisetteData
     ) async throws -> AuthSession {
-        if let code = twoFactorCode, !code.isEmpty, let cont = activeContinuation {
-            self.activeContinuation = nil
-            self.isAwaitingCode = false
-            cont.resume(returning: .verificationCode(code))
-        }
-
+        prefilledCode = twoFactorCode?.filter(\.isNumber)
+        prefilledUsed = false
+        let interactive = SelfRefreshAuthContext.interactiveTwoFactor
         return try await DeveloperPortal.shared.authenticate(
             appleID: appleID,
             password: password,
@@ -703,14 +611,26 @@ actor TwoFactorAuthBridge {
             xcodeVersion: "16.2",
             verificationHandler: { [weak self] request in
                 guard let self else { return .cancel }
-                return try await self.handleTwoFactorRequest(request: request, prefilledCode: twoFactorCode)
+                return try await self.handleTwoFactorRequest(request: request, interactive: interactive)
             }
         )
     }
 
+    func submitVerificationCode(_ code: String) {
+        guard let waiter else { return }
+        self.waiter = nil
+        waiter.resume(returning: .verificationCode(code))
+    }
+
+    func cancelWaiting() {
+        guard let waiter else { return }
+        self.waiter = nil
+        waiter.resume(returning: .cancel)
+    }
+
     private func handleTwoFactorRequest(
         request: TwoFactorRequest,
-        prefilledCode: String?
+        interactive: Bool
     ) async throws -> TwoFactorResponse {
         switch request {
         case .selectDeliveryMethod(let preferredMode, let phoneNumbers):
@@ -720,22 +640,43 @@ actor TwoFactorAuthBridge {
             return .requestSMS(phoneID: phoneNumbers.first?.id ?? "1")
 
         case .trustedDevice(let error), .sms(_, _, let error), .voice(_, _, let error):
-            if let error = error {
-                throw SelfRefreshError.invalidTwoFactorCode
+            if error != nil {
+                prefilledUsed = true
+                if !interactive {
+                    throw SelfRefreshError.invalidTwoFactorCode
+                }
+                return try await waitForUserCode()
             }
-            if let code = prefilledCode, !code.isEmpty {
+            if let code = takePrefilledCode() {
                 return .verificationCode(code)
             }
-            return try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<TwoFactorResponse, Error>) in
-                Task {
-                    await self.setContinuationAndSuspend(callerContinuation: continuation)
-                }
+            if !interactive {
+                throw SelfRefreshError.twoFactorCodeRequired
             }
+            return try await waitForUserCode()
         }
     }
 
-    private func setContinuationAndSuspend(callerContinuation: CheckedContinuation<TwoFactorResponse, Error>) {
-        callerContinuation.resume(throwing: SelfRefreshError.twoFactorCodeRequired)
+    private func takePrefilledCode() -> String? {
+        guard !prefilledUsed, let code = prefilledCode, code.count == 6 else { return nil }
+        prefilledUsed = true
+        return code
+    }
+
+    private func waitForUserCode() async throws -> TwoFactorResponse {
+        try await withTaskCancellationHandler {
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<TwoFactorResponse, Error>) in
+                if let existing = self.waiter {
+                    existing.resume(returning: .cancel)
+                }
+                self.waiter = continuation
+                Task { @MainActor in
+                    SelfRefreshManager.shared.beginTwoFactorChallenge()
+                }
+            }
+        } onCancel: {
+            Task { await self.cancelWaiting() }
+        }
     }
 }
 #endif
@@ -762,6 +703,19 @@ final class IdeviceTunnelBridge: @unchecked Sendable {
         return try withUnsafePointer(to: &addr) { ptr in
             try ptr.withMemoryRebound(to: sockaddr.self, capacity: 1) { sockaddrPtr in
                 try body(sockaddrPtr, socklen_t(MemoryLayout<sockaddr_in>.size))
+            }
+        }
+    }
+
+    /// `idevice_sockaddr` is an opaque FFI type, distinct from `sockaddr`.
+    private func withDeviceAddress<R>(
+        ip: String,
+        port: UInt16,
+        _ body: (UnsafePointer<idevice_sockaddr>, idevice_socklen_t) throws -> R
+    ) throws -> R {
+        try withSockaddr(ip: ip, port: port) { sockaddrPtr, len in
+            try sockaddrPtr.withMemoryRebound(to: idevice_sockaddr.self, capacity: 1) { rebound in
+                try body(rebound, idevice_socklen_t(len))
             }
         }
     }
@@ -799,9 +753,9 @@ final class IdeviceTunnelBridge: @unchecked Sendable {
 
         var adapter: OpaquePointer? = nil
         var handshake: OpaquePointer? = nil
-        let tunnelErr = try withSockaddr(ip: "10.7.0.1", port: 49152) { sockaddrPtr, len in
+        let tunnelErr = try withDeviceAddress(ip: "10.7.0.1", port: 49152) { address, len in
             tunnel_create_rppairing_with_options(
-                sockaddrPtr,
+                address,
                 len,
                 "SelfRefreshKit",
                 rpf,
@@ -833,12 +787,13 @@ final class IdeviceTunnelBridge: @unchecked Sendable {
         defer { misagent_client_free(misClient) }
 
         try profileData.withUnsafeBytes { buf in
-            if let ptr = buf.baseAddress?.assumingMemoryBound(to: UInt8.self) {
-                let installErr = misagent_install(misClient, ptr, profileData.count)
-                if let installErr {
-                    idevice_error_free(installErr)
-                    throw SelfRefreshError.backendOperationFailed("misagent_install returned an error")
-                }
+            guard let ptr = buf.baseAddress?.assumingMemoryBound(to: UInt8.self), !profileData.isEmpty else {
+                throw SelfRefreshError.backendOperationFailed("描述文件数据为空。")
+            }
+            let installErr = misagent_install(misClient, ptr, profileData.count)
+            if let installErr {
+                idevice_error_free(installErr)
+                throw SelfRefreshError.backendOperationFailed("misagent_install returned an error")
             }
         }
     }
@@ -851,13 +806,19 @@ final class IdeviceTunnelBridge: @unchecked Sendable {
         guard parseErr == nil, let pf = pairingFile else {
             throw SelfRefreshError.invalidPairingFile("Failed to parse Lockdown pairing bytes")
         }
-        defer { idevice_pairing_file_free(pf) }
+        var pairingConsumed = false
+        defer {
+            if !pairingConsumed {
+                idevice_pairing_file_free(pf)
+            }
+        }
 
         var provider: OpaquePointer? = nil
-        let provErr = try withSockaddr(ip: "10.7.0.1", port: 62078) { sockaddrPtr, _ in
-            sockaddrPtr.withMemoryRebound(to: idevice_sockaddr.self, capacity: 1) { reboundPtr in
-                idevice_tcp_provider_new(reboundPtr, pf, "SelfRefreshKit", &provider)
-            }
+        let provErr = try withDeviceAddress(ip: "10.7.0.1", port: 62078) { address, _ in
+            idevice_tcp_provider_new(address, pf, "SelfRefreshKit", &provider)
+        }
+        if provErr == nil {
+            pairingConsumed = true
         }
         if let provErr {
             idevice_error_free(provErr)
@@ -880,19 +841,19 @@ final class IdeviceTunnelBridge: @unchecked Sendable {
         defer { misagent_client_free(misClient) }
 
         try profileData.withUnsafeBytes { buf in
-            if let ptr = buf.baseAddress?.assumingMemoryBound(to: UInt8.self) {
-                let installErr = misagent_install(misClient, ptr, profileData.count)
-                if let installErr {
-                    idevice_error_free(installErr)
-                    throw SelfRefreshError.backendOperationFailed("misagent_install returned an error")
-                }
+            guard let ptr = buf.baseAddress?.assumingMemoryBound(to: UInt8.self), !profileData.isEmpty else {
+                throw SelfRefreshError.backendOperationFailed("描述文件数据为空。")
+            }
+            let installErr = misagent_install(misClient, ptr, profileData.count)
+            if let installErr {
+                idevice_error_free(installErr)
+                throw SelfRefreshError.backendOperationFailed("misagent_install returned an error")
             }
         }
     }
 
-    func installSignedAppBundle(
-        appBundleURL: URL,
-        bundleId: String,
+    func installSignedIPA(
+        ipaFileURL: URL,
         pairingData: Data,
         hasRPPairing: Bool
     ) async throws {
@@ -900,9 +861,9 @@ final class IdeviceTunnelBridge: @unchecked Sendable {
             ffiQueue.async {
                 do {
                     if hasRPPairing {
-                        try self.installAppBundleRPPairing(appBundleURL: appBundleURL, bundleId: bundleId, pairingData: pairingData)
+                        try self.installIPARPPairing(ipaFileURL: ipaFileURL, pairingData: pairingData)
                     } else {
-                        try self.installAppBundleLockdown(appBundleURL: appBundleURL, bundleId: bundleId, pairingData: pairingData)
+                        try self.installIPALockdown(ipaFileURL: ipaFileURL, pairingData: pairingData)
                     }
                     continuation.resume()
                 } catch {
@@ -912,55 +873,61 @@ final class IdeviceTunnelBridge: @unchecked Sendable {
         }
     }
 
-    private func uploadDirectoryViaAFC(client: OpaquePointer, sourceURL: URL, remoteRoot: String) throws {
-        _ = remoteRoot.withCString { dirPtr in
-            afc_make_directory(client, dirPtr)
+    /// Writes one signed `.ipa` to `PublicStaging/` so `installation_proxy` can install it.
+    private func uploadIPAViaAFC(client: OpaquePointer, ipaFileURL: URL) throws -> String {
+        if let mkdirErr = "PublicStaging".withCString({ afc_make_directory(client, $0) }) {
+            idevice_error_free(mkdirErr)
         }
-        let fm = FileManager.default
-        guard let enumerator = fm.enumerator(at: sourceURL, includingPropertiesForKeys: [.isDirectoryKey], options: []) else {
-            throw SelfRefreshError.backendOperationFailed("Failed to enumerate app bundle contents")
+        let remotePath = "PublicStaging/\(ipaFileURL.lastPathComponent)"
+        var fileHandle: OpaquePointer? = nil
+        let openErr = remotePath.withCString { pathPtr in
+            // AfcWr = 4: O_RDWR | O_CREAT | O_TRUNC
+            afc_file_open(client, pathPtr, AfcFopenMode(rawValue: 4), &fileHandle)
         }
-        for case let fileURL as URL in enumerator {
-            let relative = fileURL.path.replacingOccurrences(of: sourceURL.path, with: "").trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-            let remoteItemPath = "\(remoteRoot)/\(relative)"
-
-            var isDir: ObjCBool = false
-            fm.fileExists(atPath: fileURL.path, isDirectory: &isDir)
-
-            if isDir.boolValue {
-                _ = remoteItemPath.withCString { pathPtr in
-                    afc_make_directory(client, pathPtr)
-                }
-            } else {
-                var fileHandle: OpaquePointer? = nil
-                let openErr = remoteItemPath.withCString { pathPtr in
-                    afc_file_open(client, pathPtr, AfcFopenMode(rawValue: 4), &fileHandle)
-                }
-                if let openErr {
-                    idevice_error_free(openErr)
-                    throw SelfRefreshError.backendOperationFailed("afc_file_open failed: \(remoteItemPath)")
-                }
-                defer {
-                    if let fileHandle { afc_file_close(fileHandle) }
-                }
-
-                let fileData = try Data(contentsOf: fileURL, options: .alwaysMapped)
-                if !fileData.isEmpty {
-                    try fileData.withUnsafeBytes { buf in
-                        if let ptr = buf.baseAddress?.assumingMemoryBound(to: UInt8.self) {
-                            let writeErr = afc_file_write(fileHandle, ptr, fileData.count)
-                            if let writeErr {
-                                idevice_error_free(writeErr)
-                                throw SelfRefreshError.backendOperationFailed("afc_file_write failed: \(remoteItemPath)")
-                            }
-                        }
-                    }
-                }
+        if let openErr {
+            idevice_error_free(openErr)
+            throw SelfRefreshError.backendOperationFailed("afc_file_open failed: \(remotePath)")
+        }
+        guard let handle = fileHandle else {
+            throw SelfRefreshError.backendOperationFailed("AFC file handle is nil")
+        }
+        defer {
+            if let closeErr = afc_file_close(handle) {
+                idevice_error_free(closeErr)
             }
+        }
+
+        let fileData = try Data(contentsOf: ipaFileURL, options: .alwaysMapped)
+        guard !fileData.isEmpty else {
+            throw SelfRefreshError.backendOperationFailed("Signed IPA is empty")
+        }
+        try fileData.withUnsafeBytes { buf in
+            guard let ptr = buf.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
+                throw SelfRefreshError.backendOperationFailed("Signed IPA is empty")
+            }
+            let writeErr = afc_file_write(handle, ptr, fileData.count)
+            if let writeErr {
+                idevice_error_free(writeErr)
+                throw SelfRefreshError.backendOperationFailed("afc_file_write failed: \(remotePath)")
+            }
+        }
+        return remotePath
+    }
+
+    private func installDeveloperPackage(client: OpaquePointer, remotePath: String) throws {
+        let options = plist_new_dict()
+        defer { plist_free(options) }
+        plist_dict_set_item(options, "PackageType", plist_new_string("Developer"))
+        let installErr = remotePath.withCString { pathPtr in
+            installation_proxy_install(client, pathPtr, options)
+        }
+        if let installErr {
+            idevice_error_free(installErr)
+            throw SelfRefreshError.backendOperationFailed("installation_proxy_install failed")
         }
     }
 
-    private func installAppBundleRPPairing(appBundleURL: URL, bundleId: String, pairingData: Data) throws {
+    private func installIPARPPairing(ipaFileURL: URL, pairingData: Data) throws {
         var pairingFile: OpaquePointer? = nil
         let parseErr = pairingData.withUnsafeBytes { buf in
             rp_pairing_file_from_bytes(buf.baseAddress?.assumingMemoryBound(to: UInt8.self), UInt(pairingData.count), &pairingFile)
@@ -972,9 +939,9 @@ final class IdeviceTunnelBridge: @unchecked Sendable {
 
         var adapter: OpaquePointer? = nil
         var handshake: OpaquePointer? = nil
-        let tunnelErr = try withSockaddr(ip: "10.7.0.1", port: 49152) { sockaddrPtr, len in
+        let tunnelErr = try withDeviceAddress(ip: "10.7.0.1", port: 49152) { address, len in
             tunnel_create_rppairing_with_options(
-                sockaddrPtr,
+                address,
                 len,
                 "SelfRefreshKit",
                 rpf,
@@ -1005,8 +972,7 @@ final class IdeviceTunnelBridge: @unchecked Sendable {
         }
         defer { afc_client_free(afc) }
 
-        let remoteRoot = "PublicStaging/\(bundleId)/\(appBundleURL.lastPathComponent)"
-        try uploadDirectoryViaAFC(client: afc, sourceURL: appBundleURL, remoteRoot: remoteRoot)
+        let remotePath = try uploadIPAViaAFC(client: afc, ipaFileURL: ipaFileURL)
 
         var instClient: OpaquePointer? = nil
         let instErr = installation_proxy_connect_rsd(adapter, handshake, &instClient)
@@ -1019,21 +985,10 @@ final class IdeviceTunnelBridge: @unchecked Sendable {
         }
         defer { installation_proxy_client_free(inst) }
 
-        let options = plist_new_dict()
-        defer { plist_free(options) }
-        plist_dict_set_item(options, "PackageType", plist_new_string("Developer"))
-
-        let installPath = "PublicStaging/\(bundleId)/\(appBundleURL.lastPathComponent)"
-        let installErr = installPath.withCString { pathPtr in
-            installation_proxy_install(inst, pathPtr, options)
-        }
-        if let installErr {
-            idevice_error_free(installErr)
-            throw SelfRefreshError.backendOperationFailed("installation_proxy_install failed")
-        }
+        try installDeveloperPackage(client: inst, remotePath: remotePath)
     }
 
-    private func installAppBundleLockdown(appBundleURL: URL, bundleId: String, pairingData: Data) throws {
+    private func installIPALockdown(ipaFileURL: URL, pairingData: Data) throws {
         var pairingFile: OpaquePointer? = nil
         let parseErr = pairingData.withUnsafeBytes { buf in
             idevice_pairing_file_from_bytes(buf.baseAddress?.assumingMemoryBound(to: UInt8.self), UInt(pairingData.count), &pairingFile)
@@ -1041,13 +996,19 @@ final class IdeviceTunnelBridge: @unchecked Sendable {
         guard parseErr == nil, let pf = pairingFile else {
             throw SelfRefreshError.invalidPairingFile("Failed to parse Lockdown pairing bytes")
         }
-        defer { idevice_pairing_file_free(pf) }
+        var pairingConsumed = false
+        defer {
+            if !pairingConsumed {
+                idevice_pairing_file_free(pf)
+            }
+        }
 
         var provider: OpaquePointer? = nil
-        let provErr = try withSockaddr(ip: "10.7.0.1", port: 62078) { sockaddrPtr, _ in
-            sockaddrPtr.withMemoryRebound(to: idevice_sockaddr.self, capacity: 1) { reboundPtr in
-                idevice_tcp_provider_new(reboundPtr, pf, "SelfRefreshKit", &provider)
-            }
+        let provErr = try withDeviceAddress(ip: "10.7.0.1", port: 62078) { address, _ in
+            idevice_tcp_provider_new(address, pf, "SelfRefreshKit", &provider)
+        }
+        if provErr == nil {
+            pairingConsumed = true
         }
         if let provErr {
             idevice_error_free(provErr)
@@ -1069,8 +1030,7 @@ final class IdeviceTunnelBridge: @unchecked Sendable {
         }
         defer { afc_client_free(afc) }
 
-        let remoteRoot = "PublicStaging/\(bundleId)/\(appBundleURL.lastPathComponent)"
-        try uploadDirectoryViaAFC(client: afc, sourceURL: appBundleURL, remoteRoot: remoteRoot)
+        let remotePath = try uploadIPAViaAFC(client: afc, ipaFileURL: ipaFileURL)
 
         var instClient: OpaquePointer? = nil
         let instErr = installation_proxy_connect(tcpProvider, &instClient)
@@ -1083,18 +1043,7 @@ final class IdeviceTunnelBridge: @unchecked Sendable {
         }
         defer { installation_proxy_client_free(inst) }
 
-        let options = plist_new_dict()
-        defer { plist_free(options) }
-        plist_dict_set_item(options, "PackageType", plist_new_string("Developer"))
-
-        let installPath = "PublicStaging/\(bundleId)/\(appBundleURL.lastPathComponent)"
-        let installErr = installPath.withCString { pathPtr in
-            installation_proxy_install(inst, pathPtr, options)
-        }
-        if let installErr {
-            idevice_error_free(installErr)
-            throw SelfRefreshError.backendOperationFailed("installation_proxy_install failed")
-        }
+        try installDeveloperPackage(client: inst, remotePath: remotePath)
     }
 }
 #endif

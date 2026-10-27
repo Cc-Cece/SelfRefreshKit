@@ -58,6 +58,8 @@ public final class SelfRefreshManager: ObservableObject {
 
     @Published public private(set) var isRefreshing: Bool = false
     @Published public private(set) var isAuthenticating: Bool = false
+    /// True while SideSign is waiting for a 6-digit Apple 2FA code.
+    @Published public private(set) var isAwaitingTwoFactor: Bool = false
     @Published public private(set) var isCheckingHealth: Bool = false
     @Published public private(set) var healthReport: HealthCheckReport?
     @Published public private(set) var lastRefreshDate: Date?
@@ -400,8 +402,7 @@ public final class SelfRefreshManager: ObservableObject {
         twoFactorCode: String? = nil,
         anisetteURL: String
     ) async throws -> AppleAuthSession {
-        isAuthenticating = true
-        defer { isAuthenticating = false }
+        try ensureExclusiveAuthOperation(noticeTitle: .noticeAuthFailedTitle)
 
         let trimmedID = appleID.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedURL = anisetteURL.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -418,13 +419,21 @@ public final class SelfRefreshManager: ObservableObject {
             throw err
         }
 
+        isAuthenticating = true
+        defer {
+            isAuthenticating = false
+            clearTwoFactorWaitIfNeeded()
+        }
+
         do {
-            let session = try await driver.authenticateAppleID(
-                appleID: trimmedID,
-                password: password,
-                twoFactorCode: twoFactorCode,
-                anisetteURL: parsedURL
-            )
+            let session = try await SelfRefreshAuthContext.$interactiveTwoFactor.withValue(true) {
+                try await driver.authenticateAppleID(
+                    appleID: trimmedID,
+                    password: password,
+                    twoFactorCode: twoFactorCode,
+                    anisetteURL: parsedURL
+                )
+            }
             try SelfRefreshKeychain.savePassword(password, for: trimmedID)
             try SelfRefreshKeychain.saveAuthSession(session)
 
@@ -459,6 +468,57 @@ public final class SelfRefreshManager: ObservableObject {
         self.appleID = ""
         defaults.removeObject(forKey: Keys.appleID)
         postNotice(title: localized(.noticeSignedOutTitle), message: localized(.noticeSignedOutMessage))
+    }
+
+    /// Shows the 2FA sheet. Ignored unless login or refresh is actually in flight, so a late callback cannot reopen it.
+    func beginTwoFactorChallenge() {
+        guard isAuthenticating || isRefreshing else { return }
+        isAwaitingTwoFactor = true
+    }
+
+    /// Resumes the SideSign verification handler. The sheet stays up until the code has 6 digits.
+    public func submitTwoFactorCode(_ code: String) {
+        let digits = code.filter(\.isNumber)
+        guard isAwaitingTwoFactor, digits.count == 6 else { return }
+        isAwaitingTwoFactor = false
+        #if canImport(SideSign)
+        Task {
+            await TwoFactorAuthBridge.shared.submitVerificationCode(digits)
+        }
+        #endif
+    }
+
+    /// Resumes the SideSign verification handler with `.cancel`.
+    public func cancelTwoFactorEntry() {
+        guard isAwaitingTwoFactor else { return }
+        isAwaitingTwoFactor = false
+        #if canImport(SideSign)
+        Task {
+            await TwoFactorAuthBridge.shared.cancelWaiting()
+        }
+        #endif
+    }
+
+    /// Rejects a second login or refresh. Does not clear `isAwaitingTwoFactor`, so the operation already waiting keeps its sheet.
+    private func ensureExclusiveAuthOperation(noticeTitle: SelfRefreshL10nKey) throws {
+        guard !isRefreshing, !isAuthenticating else {
+            let err = SelfRefreshError.backendOperationFailed("已有登录或续签正在进行。")
+            postNotice(title: localized(noticeTitle), message: localized(err.localizedDescription), isError: true)
+            throw err
+        }
+    }
+
+    private func clearTwoFactorWaitIfNeeded() {
+        if isAwaitingTwoFactor {
+            cancelTwoFactorEntry()
+        }
+    }
+
+    private func hostBundleIdentifier() throws -> String {
+        guard let bundleID = Bundle.main.bundleIdentifier, !bundleID.isEmpty else {
+            throw SelfRefreshError.backendOperationFailed("无法读取宿主 App 的 Bundle ID。")
+        }
+        return bundleID
     }
 
     // MARK: - Loopback VPN & 4-Point Health Check
@@ -599,12 +659,17 @@ public final class SelfRefreshManager: ObservableObject {
 
     // MARK: - Mode A: 1-Second Profile-Only Refresh (No Crash / No IPA Needed)
 
-    public func refreshProfileOnly() async throws {
-        guard !isRefreshing else { return }
+    /// Installs a new provisioning profile with misagent. Does not mark the local certificate as taken over.
+    /// - Parameter allowInteractiveTwoFactor: Pass `false` from the background Shortcut so a missing code fails instead of waiting.
+    public func refreshProfileOnly(allowInteractiveTwoFactor: Bool = true) async throws {
+        try ensureExclusiveAuthOperation(noticeTitle: .noticeRefreshFailedTitle)
         isRefreshing = true
         lastError = ""
         statusMessage = localized(.statusProcessing)
-        defer { isRefreshing = false }
+        defer {
+            isRefreshing = false
+            clearTwoFactorWaitIfNeeded()
+        }
 
         #if canImport(UIKit)
         var bgTask: UIBackgroundTaskIdentifier = .invalid
@@ -650,15 +715,23 @@ public final class SelfRefreshManager: ObservableObject {
             throw err
         }
 
-        let bundleID = Bundle.main.bundleIdentifier ?? "com.cccece.picharbor"
-        let updatedProfile = try await driver.refreshProvisioningProfileOnly(
-            appleID: trimmedID,
-            password: password,
-            session: authSession,
-            anisetteURL: anisetteURL,
-            pairingData: pairingData,
-            bundleIdentifier: bundleID
-        )
+        let updatedProfile: ProvisioningProfileMetadata
+        do {
+            let bundleID = try hostBundleIdentifier()
+            updatedProfile = try await SelfRefreshAuthContext.$interactiveTwoFactor.withValue(allowInteractiveTwoFactor) {
+                try await driver.refreshProvisioningProfileOnly(
+                    appleID: trimmedID,
+                    password: password,
+                    session: authSession,
+                    anisetteURL: anisetteURL,
+                    pairingData: pairingData,
+                    bundleIdentifier: bundleID
+                )
+            }
+        } catch {
+            postNotice(title: localized(.noticeRefreshFailedTitle), message: localized(error.localizedDescription), isError: true)
+            throw error
+        }
 
         self.profileMetadata = updatedProfile
         let now = Date()
@@ -677,12 +750,15 @@ public final class SelfRefreshManager: ObservableObject {
 
     // MARK: - Mode B: Full IPA Resign & Self-Install (Initial Takeover, Cloud OTA, & Direct IPA URL)
 
-    public func resignAndInstall(ipaURL: URL) async throws {
-        guard !isRefreshing else { return }
+    public func resignAndInstall(ipaURL: URL, allowInteractiveTwoFactor: Bool = true) async throws {
+        try ensureExclusiveAuthOperation(noticeTitle: .noticeRefreshFailedTitle)
         isRefreshing = true
         lastError = ""
         statusMessage = localized(.statusProcessing)
-        defer { isRefreshing = false }
+        defer {
+            isRefreshing = false
+            clearTwoFactorWaitIfNeeded()
+        }
 
         let accessed = ipaURL.startAccessingSecurityScopedResource()
         defer {
@@ -718,16 +794,24 @@ public final class SelfRefreshManager: ObservableObject {
             throw err
         }
 
-        let bundleID = Bundle.main.bundleIdentifier ?? "com.cccece.picharbor"
-        let updatedProfile = try await driver.resignAndInstallIPA(
-            ipaFileURL: ipaURL,
-            appleID: trimmedID,
-            password: password,
-            session: authSession,
-            anisetteURL: anisetteURL,
-            pairingData: pairingData,
-            bundleIdentifier: bundleID
-        )
+        let updatedProfile: ProvisioningProfileMetadata
+        do {
+            let bundleID = try hostBundleIdentifier()
+            updatedProfile = try await SelfRefreshAuthContext.$interactiveTwoFactor.withValue(allowInteractiveTwoFactor) {
+                try await driver.resignAndInstallIPA(
+                    ipaFileURL: ipaURL,
+                    appleID: trimmedID,
+                    password: password,
+                    session: authSession,
+                    anisetteURL: anisetteURL,
+                    pairingData: pairingData,
+                    bundleIdentifier: bundleID
+                )
+            }
+        } catch {
+            postNotice(title: localized(.noticeRefreshFailedTitle), message: localized(error.localizedDescription), isError: true)
+            throw error
+        }
 
         self.profileMetadata = updatedProfile
         self.isLocalCertificateTakenOver = true
@@ -855,7 +939,7 @@ public struct SelfRefreshProfileIntent: AppIntent {
 
     @MainActor
     public func perform() async throws -> some IntentResult & ProvidesDialog {
-        try await SelfRefreshManager.shared.refreshProfileOnly()
+        try await SelfRefreshManager.shared.refreshProfileOnly(allowInteractiveTwoFactor: false)
         let dialogText = SelfRefreshManager.shared.localized(.intentRefreshResult)
         return .result(dialog: IntentDialog(stringLiteral: dialogText))
     }
