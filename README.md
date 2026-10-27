@@ -1,30 +1,48 @@
 # SelfRefreshKit
 
-**SelfRefreshKit** 是一个轻量级、纯原生 SwiftUI 风格的 iOS 应用内置自续签与云端 OTA 更新通用组件库（[https://github.com/Cc-Cece/SelfRefreshKit/](https://github.com/Cc-Cece/SelfRefreshKit/)，MIT 开源）。
+**English** | [简体中文](README_ZH.md)
 
-它剥离了 SideStore 臃肿的应用商店与多源管理代码，只保留最核心的**「7 天描述文件极速无感刷新」**与**「首次证书夺权 / 云端未签名 IPA 自签名 OTA 升级」**能力。默认推荐配合 App Store 免费的 **[LocalDevVPN](https://apps.apple.com/app/localdevvpn/id6744003051)** 使用，同时无缝兼容 **StosVPN** 与 **WireGuard**。
+**SelfRefreshKit** is a lightweight, native SwiftUI on-device provisioning profile auto-refresh and cloud OTA self-upgrade library for sideloaded iOS applications ([https://github.com/Cc-Cece/SelfRefreshKit/](https://github.com/Cc-Cece/SelfRefreshKit/), MIT License).
 
----
-
-## 核心特性
-
-1. **清爽分层原生 UI (`Form` + `.insetGrouped`)**
-   - **主页面**：仅保留「当前状态」、二级功能入口与「关于组件」（含官方仓库 [https://github.com/Cc-Cece/SelfRefreshKit/](https://github.com/Cc-Cece/SelfRefreshKit/)）。
-   - **二级页面**：将「必需操作（3 步）」、「健康状态检查（4 项诊断）」与「可选操作（静默续签、云端 OTA、快捷指令自动化）」独立拆分至二级页面，层次清晰。
-2. **内置 7 国语言与宿主自适应**
-   - 原生内置：**简体中文 (`zh-Hans`)、English (`en`)、粤语 (`yue-Hant-HK`)、日本語 (`ja`)、Deutsch (`de`)、Français (`fr`)、한국어 (`ko`)**。
-   - 优先级：**优先跟随宿主 App 语言**，若宿主语言不在列表内则**自动回退至英文 (`en`)**，同时支持用户在页面内手动切换组件语言。
-3. **纯后台快捷指令 (`Refresh App Provisioning Profile`)**
-   - 内置 iOS 原生 `SelfRefreshProfileIntent`（默认英文动作名 **`Refresh App Provisioning Profile`**，设置 `openAppWhenRun = false`），在系统「快捷指令 -> 自动化」中触发时**纯后台静默运行，不自动跳转或打断前台使用**。
-4. **双模式续签引擎**
-   - **日常 1 秒极速模式 (`refreshProfileOnly`)**：仅更新 ~15KB 的 `.mobileprovision` 描述文件并注入系统 `misagent` 服务，**App 不闪退、平时无需在沙盒常备双倍体积的 `.ipa` 母本**。
-   - **完整重签模式 (`resignAndInstall`)**：既用于首次从电脑（如 Windows Sideloadly）安装后的手机端证书夺权，也用于拉取 GitHub Actions 构建的未签名 `.ipa` 完成免数据线自我 OTA 升级。
+It strips away bloated app-store and multi-source management overhead, focusing purely on **1-second seamless 7-day provisioning profile refresh** and **on-device IPA resigning / cloud OTA self-upgrades**. Designed to work out-of-the-box with the free **[LocalDevVPN](https://apps.apple.com/app/localdevvpn/id6744003051)** on the App Store, while remaining fully compatible with **StosVPN** and **WireGuard**.
 
 ---
 
-## 快速接入（仅需 2 步）
+## Key Features
 
-### 1. 在宿主 App 启动时初始化配置
+1. **Clean Two-Tier Native iOS UI (`Form` + `.insetGrouped`)**
+   - **Main Screen (`SelfRefreshView`)**: Displays only **Current Status** (`Profile Validity` + `Refresh Now`), navigation entries to secondary pages, **Component Language Picker**, and **About Component**.
+   - **Secondary Pages**:
+     - **Required Setup (`SelfRefreshRequiredSetupView`)**: 3-step onboarding checklist (Import Device Pairing File, Apple Developer Authentication with 2FA & Keychain session persistence, and Initial Local Signing Takeover).
+     - **Health Status Check (`SelfRefreshHealthCheckView`)**: 4-point live diagnostics (Pairing File + RPPairing keys, `10.7.0.1` Loopback VPN interface, Anisette V3 server latency, and Apple Developer session).
+     - **Optional Actions (`SelfRefreshOptionalActionsView`)**: Background Shortcuts automation, preferred VPN selector, configurable GitHub Releases OTA self-upgrade (with 2-step security confirmation), direct `.ipa` URL download & install dialog, and local `.ipa` resigning.
+2. **Standard 7-Language Localization (`.lproj/Localizable.strings` + `SelfRefreshL10nKey`)**
+   - Built-in support for **English (`en`), Simplified Chinese (`zh-Hans`), Cantonese / Traditional HK (`yue-Hant-HK`), Japanese (`ja`), German (`de`), French (`fr`), and Korean (`ko`)**.
+   - **Resolution Priority**: Manual user selection $\rightarrow$ Host app language (`hostLanguageProvider`) $\rightarrow$ Automatic fallback to **English (`en`)**.
+3. **Dual-Mode Signing Engine**
+   - **1-Second Profile-Only Mode (`refreshProfileOnly`)**: Updates only the ~15 KB `.mobileprovision` file via `misagent` without restarting the app or keeping a duplicate `.ipa` in sandbox storage.
+   - **Full Resign & Install Mode (`resignAndInstall`)**: Used once for initial local certificate takeover after computer sideloading, and anytime for cable-free cloud OTA updates or direct `.ipa` URL installations.
+
+---
+
+## Shortcuts
+
+`SelfRefreshKit` includes a built-in background `AppIntent` (**`Refresh App Provisioning Profile`**) with `openAppWhenRun = false` and localized `.lproj` titles across all 7 supported languages. When triggered by Apple Shortcuts, it refreshes your 7-day provisioning profile **silently in the background without opening or switching to the app**.
+
+[![Get Auto-Refresh Shortcut](https://img.shields.io/badge/_Shortcuts-Get_Auto--Refresh_Shortcut-007AFF?style=for-the-badge)](https://www.icloud.com/shortcuts/7f3fabf7fa234031bd1d22249bc7f84a)
+
+### Automated Background Setup Steps
+
+1. Tap the button above to add the official **[Auto-Refresh iCloud Shortcut](https://www.icloud.com/shortcuts/7f3fabf7fa234031bd1d22249bc7f84a)**, or create a new Personal Automation in the system **Shortcuts** app (**Automation** tab $\rightarrow$ **Time of Day**, e.g. `04:00 AM` daily, select **Run Immediately**).
+2. Add action: **Connect LocalDevVPN**, followed by **Wait 2 seconds**.
+3. Add action: Search for your host app and select **Refresh App Provisioning Profile** (runs silently in background).
+4. Add action: **Wait 5 seconds**, then **Disconnect LocalDevVPN**.
+
+---
+
+## Quick Integration (2 Steps)
+
+### 1. Configure on App Startup
 
 ```swift
 import SwiftUI
@@ -37,8 +55,8 @@ struct MyApp: App {
             SelfRefreshConfiguration(
                 urlScheme: "myapp",
                 preferredVPN: .localDevVPN,
-                githubRepository: "yourname/MyApp", // 可选：开启云端 OTA 自签名升级
-                hostLanguageProvider: { MyAppL10n.currentLanguageCode } // 可选：实时跟随宿主语言，未匹配回退英文
+                githubRepository: "yourname/MyApp", // Optional: enables GitHub Releases OTA self-upgrade
+                hostLanguageProvider: { MyAppL10n.currentLanguageCode } // Optional: follows host app language, falls back to English
             )
         )
     }
@@ -51,7 +69,7 @@ struct MyApp: App {
 }
 ```
 
-### 2. 在宿主 App 的设置页嵌入入口
+### 2. Embed in Host Settings Screen
 
 ```swift
 import SwiftUI
@@ -60,7 +78,7 @@ import SelfRefreshKit
 struct SettingsView: View {
     var body: some View {
         List {
-            Section("开发者与签名维护") {
+            Section("Signing & Maintenance") {
                 SelfRefreshSection()
             }
         }
@@ -70,6 +88,6 @@ struct SettingsView: View {
 
 ---
 
-## 开源许可 (License)
+## License
 
-本项目基于 **MIT License** 开源，详见 [LICENSE](LICENSE)。
+Released under the **MIT License**. See [LICENSE](LICENSE) for details.

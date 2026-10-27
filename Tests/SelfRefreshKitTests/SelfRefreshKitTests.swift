@@ -12,7 +12,7 @@ final class SelfRefreshKitTests: XCTestCase {
         <plist version="1.0">
         <dict>
             <key>UUID</key>
-            <string>12345678-ABCD-EF00-1122-334455667788</string>
+            <string>12345678-ABCD-EF00-1122-123456789ABC</string>
             <key>Name</key>
             <string>iOS Team Provisioning Profile: com.cccece.picharbor</string>
             <key>AppIDName</key>
@@ -38,7 +38,7 @@ final class SelfRefreshKitTests: XCTestCase {
         cmsWrapped.append(Data([0x00, 0x00, 0xFF]))
 
         let parsed = try ProfileInspector.parseMobileProvisionData(cmsWrapped)
-        XCTAssertEqual(parsed.uuid, "12345678-ABCD-EF00-1122-334455667788")
+        XCTAssertEqual(parsed.uuid, "12345678-ABCD-EF00-1122-123456789ABC")
         XCTAssertEqual(parsed.bundleIdentifier, "com.cccece.picharbor")
         XCTAssertEqual(parsed.teamIdentifier, "8X92TEAMID")
         let remaining = parsed.remainingDaysAndHours(from: now)
@@ -118,6 +118,27 @@ final class SelfRefreshKitTests: XCTestCase {
         XCTAssertEqual(report.items.first(where: { $0.id == "pairing" })?.status, .healthy)
     }
 
+    func testAllSevenLanguagesHave100PercentKeyParityIncludingAboutAndShortcuts() {
+        let concreteLanguages: [SelfRefreshLanguage] = [
+            .english,
+            .simplifiedChinese,
+            .cantonese,
+            .japanese,
+            .german,
+            .french,
+            .korean
+        ]
+
+        for lang in concreteLanguages {
+            let table = SelfRefreshStrings.table(for: lang)
+            for key in SelfRefreshL10nKey.allCases {
+                let value = table[key.rawValue]
+                XCTAssertNotNil(value, "Missing key '\(key.rawValue)' in language '\(lang.rawValue)'")
+                XCTAssertFalse(value?.isEmpty ?? true, "Empty translation for '\(key.rawValue)' in '\(lang.rawValue)'")
+            }
+        }
+    }
+
     @MainActor
     func testSevenLanguagesHostFallbackToEnglishAndManualOverride() {
         let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -134,38 +155,78 @@ final class SelfRefreshKitTests: XCTestCase {
         )
 
         XCTAssertEqual(manager.selectedLanguage, .followHost)
-        XCTAssertEqual(manager.localized("当前状态"), "Current Status")
+        XCTAssertEqual(manager.localized(.statusHeader), "Current Status")
+        XCTAssertEqual(manager.localized(.statusRefreshNow), "Refresh Now")
+        XCTAssertEqual(manager.localized(.aboutEngineMuxer), "Muxer Engine")
 
         simulatedHostLang = "zh-Hans"
-        XCTAssertEqual(manager.localized("当前状态"), "当前状态")
+        XCTAssertEqual(manager.localized(.statusHeader), "当前状态")
+        XCTAssertEqual(manager.localized(.statusRefreshNow), "立即续签")
+        XCTAssertEqual(manager.localized(.aboutEngineMuxer), "通信引擎")
 
         simulatedHostLang = "yue-HK"
-        XCTAssertEqual(manager.localized("当前状态"), "目前狀態")
+        XCTAssertEqual(manager.localized(.statusHeader), "目前狀態")
+        XCTAssertEqual(manager.localized(.aboutEngineMuxer), "通訊引擎")
 
         simulatedHostLang = "ja-JP"
-        XCTAssertEqual(manager.localized("当前状态"), "現在のステータス")
+        XCTAssertEqual(manager.localized(.statusHeader), "現在のステータス")
+        XCTAssertEqual(manager.localized(.aboutEngineMuxer), "通信エンジン")
 
         simulatedHostLang = "de-DE"
-        XCTAssertEqual(manager.localized("当前状态"), "Aktueller Status")
+        XCTAssertEqual(manager.localized(.statusHeader), "Aktueller Status")
+        XCTAssertEqual(manager.localized(.aboutEngineMuxer), "Muxer-Engine")
 
         simulatedHostLang = "fr-FR"
-        XCTAssertEqual(manager.localized("当前状态"), "État actuel")
+        XCTAssertEqual(manager.localized(.statusHeader), "État actuel")
+        XCTAssertEqual(manager.localized(.aboutEngineMuxer), "Moteur Muxer")
 
         simulatedHostLang = "ko-KR"
-        XCTAssertEqual(manager.localized("当前状态"), "현재 상태")
+        XCTAssertEqual(manager.localized(.statusHeader), "현재 상태")
+        XCTAssertEqual(manager.localized(.aboutEngineMuxer), "통신 엔진")
 
         // Manual override takes priority over host language
         manager.selectedLanguage = .japanese
         simulatedHostLang = "en-US"
-        XCTAssertEqual(manager.localized("当前状态"), "現在のステータス")
+        XCTAssertEqual(manager.localized(.statusHeader), "現在のステータス")
     }
 
     @MainActor
-    func testDefaultVPNRepoURLAndBackgroundShortcutIntent() {
+    func testConfigurableOTARepositoryAndDirectIPAURLValidation() async {
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let suiteName = "test.selfrefresh.ota.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        let manager = SelfRefreshManager(defaults: defaults, storageDirectory: tempDir)
+
+        manager.configure(
+            SelfRefreshConfiguration(
+                urlScheme: "picharbor",
+                githubRepository: "Cc-Cece/PicHarbor-iOS"
+            )
+        )
+
+        XCTAssertEqual(manager.effectiveGitHubRepository, "Cc-Cece/PicHarbor-iOS")
+
+        manager.updateCustomGitHubRepository("CustomUser/CustomRepo")
+        XCTAssertEqual(manager.effectiveGitHubRepository, "CustomUser/CustomRepo")
+
+        manager.resetGitHubRepositoryToDefault()
+        XCTAssertEqual(manager.effectiveGitHubRepository, "Cc-Cece/PicHarbor-iOS")
+
+        do {
+            try await manager.downloadAndInstallDirectIPA(urlString: "not-a-valid-url")
+            XCTFail("Expected invalid URL to throw")
+        } catch {
+            XCTAssertEqual(manager.activeNotice?.isError, true)
+        }
+    }
+
+    @MainActor
+    func testOfficialURLsAndBackgroundShortcutIntent() {
         let config = SelfRefreshConfiguration(urlScheme: "picharbor")
         XCTAssertEqual(config.preferredVPN, .localDevVPN)
         XCTAssertEqual(SelfRefreshConfiguration.officialRepositoryURL.absoluteString, "https://github.com/Cc-Cece/SelfRefreshKit/")
-        if #available(iOS 16.0, macOS 13.0, *) {
+        XCTAssertEqual(SelfRefreshConfiguration.shortcutsDocumentationURL.absoluteString, "https://github.com/Cc-Cece/SelfRefreshKit/?tab=readme-ov-file#Shortcuts")
+        if #available(iOS 17.0, macOS 14.0, *) {
             XCTAssertFalse(SelfRefreshProfileIntent.openAppWhenRun)
         }
         XCTAssertGreaterThanOrEqual(AnisetteServerPreset.defaults.count, 4)

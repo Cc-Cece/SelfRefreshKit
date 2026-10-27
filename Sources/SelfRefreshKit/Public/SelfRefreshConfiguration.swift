@@ -214,6 +214,7 @@ public struct SelfRefreshConfiguration: Sendable {
     public static let minimuxerEngineVersion = "minimuxer-bridge 0.4.x"
     public static let altSignEngineVersion = "SideSign/AltSign 1.6.x"
     public static let officialRepositoryURL = URL(string: "https://github.com/Cc-Cece/SelfRefreshKit/")!
+    public static let shortcutsDocumentationURL = URL(string: "https://github.com/Cc-Cece/SelfRefreshKit/?tab=readme-ov-file#Shortcuts")!
 
     /// Custom URL scheme registered by the host application (kept for backward compatibility).
     public var urlScheme: String

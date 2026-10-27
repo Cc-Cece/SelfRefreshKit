@@ -3,7 +3,7 @@ import PackageDescription
 
 let package = Package(
     name: "SelfRefreshKit",
-    defaultLocalization: "zh-Hans",
+    defaultLocalization: "en",
     platforms: [
         .iOS(.v17),
         .macOS(.v14)
@@ -17,7 +17,10 @@ let package = Package(
     targets: [
         .target(
             name: "SelfRefreshKit",
-            path: "Sources/SelfRefreshKit"
+            path: "Sources/SelfRefreshKit",
+            resources: [
+                .process("Resources")
+            ]
         ),
         .testTarget(
             name: "SelfRefreshKitTests",
