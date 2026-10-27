@@ -745,8 +745,6 @@ private struct SelfRefreshAccountSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var appleID: String = ""
     @State private var password: String = ""
-    @State private var twoFactorCode: String = ""
-    @State private var showTwoFactorField: Bool = false
     @State private var anisetteURL: String = ""
     @State private var errorText: String = ""
 
@@ -771,15 +769,6 @@ private struct SelfRefreshAccountSheet: View {
                     .accessibilityIdentifier("selfRefresh.appleIDField")
                 SecureField(manager.localized(.accountPasswordPlaceholder), text: $password)
                     .accessibilityIdentifier("selfRefresh.passwordField")
-
-                Toggle(manager.localized(.accountToggle2FA), isOn: $showTwoFactorField)
-                if showTwoFactorField {
-                    TextField(manager.localized(.account2FAPlaceholder), text: $twoFactorCode)
-                        #if os(iOS)
-                        .keyboardType(.numberPad)
-                        #endif
-                        .accessibilityIdentifier("selfRefresh.twoFactorField")
-                }
             } header: {
                 Text(manager.localized(.accountLoginSection))
             } footer: {
@@ -821,7 +810,6 @@ private struct SelfRefreshAccountSheet: View {
                             _ = try await manager.authenticateAndSaveAccount(
                                 appleID: appleID,
                                 password: password,
-                                twoFactorCode: showTwoFactorField ? twoFactorCode : nil,
                                 anisetteURL: anisetteURL
                             )
                             dismiss()
