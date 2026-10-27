@@ -80,6 +80,7 @@ public final class SelfRefreshManager: ObservableObject {
         static let takenOver = "selfrefreshkit.takenOver"
         static let lastRefreshDate = "selfrefreshkit.lastRefreshDate"
         static let cachedExpirationDate = "selfrefreshkit.cachedExpirationDate"
+        static let cachedProfileMetadata = "selfrefreshkit.cachedProfileMetadata"
         static let setupGuideSkipped = "selfrefreshkit.setupGuideSkipped"
     }
 
@@ -264,9 +265,20 @@ public final class SelfRefreshManager: ObservableObject {
     // MARK: - Step 1: Pairing File Import (Supports XML & Binary Plist + Detailed Feedback)
 
     public func reloadEmbeddedProfile(in bundleURL: URL = Bundle.main.bundleURL) {
-        if let parsed = ProfileInspector.inspectEmbeddedProfile(in: bundleURL) {
-            self.profileMetadata = parsed
-            defaults.set(parsed.expirationDate, forKey: Keys.cachedExpirationDate)
+        var active: ProvisioningProfileMetadata? = ProfileInspector.inspectEmbeddedProfile(in: bundleURL)
+        if let data = defaults.data(forKey: Keys.cachedProfileMetadata),
+           let cached = try? JSONDecoder().decode(ProvisioningProfileMetadata.self, from: data) {
+            if let current = active {
+                if cached.expirationDate > current.expirationDate {
+                    active = cached
+                }
+            } else {
+                active = cached
+            }
+        }
+        if let resolved = active {
+            self.profileMetadata = resolved
+            defaults.set(resolved.expirationDate, forKey: Keys.cachedExpirationDate)
         } else if let cachedExp = defaults.object(forKey: Keys.cachedExpirationDate) as? Date {
             let bundleID = Bundle.main.bundleIdentifier ?? "com.app.sideloaded"
             self.profileMetadata = ProvisioningProfileMetadata(
@@ -653,6 +665,9 @@ public final class SelfRefreshManager: ObservableObject {
         self.lastRefreshDate = now
         defaults.set(now, forKey: Keys.lastRefreshDate)
         defaults.set(updatedProfile.expirationDate, forKey: Keys.cachedExpirationDate)
+        if let encoded = try? JSONEncoder().encode(updatedProfile) {
+            defaults.set(encoded, forKey: Keys.cachedProfileMetadata)
+        }
         postNotice(
             title: localized(.noticeRefreshSuccessTitle),
             message: localized(.noticeRefreshSuccessMessage),
@@ -721,6 +736,9 @@ public final class SelfRefreshManager: ObservableObject {
         defaults.set(true, forKey: Keys.takenOver)
         defaults.set(now, forKey: Keys.lastRefreshDate)
         defaults.set(updatedProfile.expirationDate, forKey: Keys.cachedExpirationDate)
+        if let encoded = try? JSONEncoder().encode(updatedProfile) {
+            defaults.set(encoded, forKey: Keys.cachedProfileMetadata)
+        }
         postNotice(
             title: localized(.noticeTakeoverSuccessTitle),
             message: localized(.noticeTakeoverSuccessMessage),
@@ -825,28 +843,12 @@ public final class SelfRefreshManager: ObservableObject {
 
 #if canImport(AppIntents)
 /// Built-in background iOS Shortcuts `AppIntent`.
-/// - Supports all 7 built-in languages via `Bundle.module` `.lproj/Localizable.strings` (falling back to English `"Refresh App Provisioning Profile"`).
+/// - Uses the main bundle for `LocalizedStringResource` metadata extraction as required by Xcode's `appintentsmetadataprocessor` (defaulting to `"Refresh App Provisioning Profile"`).
 /// - Runs purely in the background (`openAppWhenRun = false`) without opening or jumping to the host app.
 @available(iOS 17.0, macOS 14.0, *)
 public struct SelfRefreshProfileIntent: AppIntent {
-    #if SWIFT_PACKAGE
-    public static var title: LocalizedStringResource = LocalizedStringResource(
-        "srk.intent.refresh.title",
-        defaultValue: "Refresh App Provisioning Profile",
-        bundle: .atURL(Bundle.module.bundleURL)
-    )
-    public static var description = IntentDescription(
-        LocalizedStringResource(
-            "srk.intent.refresh.description",
-            defaultValue: "Silently refreshes the 7-day provisioning profile in the background via LocalDevVPN without opening the app.",
-            bundle: .atURL(Bundle.module.bundleURL)
-        )
-    )
-    #else
     public static var title: LocalizedStringResource = "Refresh App Provisioning Profile"
     public static var description = IntentDescription("Silently refreshes the 7-day provisioning profile in the background via LocalDevVPN without opening the app.")
-    #endif
-
     public static var openAppWhenRun: Bool = false
 
     public init() {}

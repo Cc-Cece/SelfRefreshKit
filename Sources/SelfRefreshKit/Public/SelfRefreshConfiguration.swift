@@ -255,7 +255,7 @@ public struct SelfRefreshConfiguration: Sendable {
 }
 
 /// Parsed information from the application's `embedded.mobileprovision` file.
-public struct ProvisioningProfileMetadata: Equatable, Sendable {
+public struct ProvisioningProfileMetadata: Equatable, Sendable, Codable {
     public var uuid: String
     public var name: String
     public var appIDName: String

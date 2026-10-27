@@ -88,7 +88,7 @@
 "srk.shortcut.guide_section" = "백그라운드 자동화 설정 단계";
 "srk.shortcut.step1" = "1. 시스템 '단축어' 앱을 열고 '자동화' 탭에서 특정 시간(예: 매일 04:00, '즉시 실행' 선택)을 생성합니다.";
 "srk.shortcut.step2" = "2. 동작 추가: LocalDevVPN 연결 후 '2초 대기'를 추가합니다.";
-"srk.shortcut.step3" = "3. 동작 추가: 이 앱을 검색하여 '앱 프로비저닝 프로파일 갱신'을 선택합니다 (백그라운드 무음 실행).";
+"srk.shortcut.step3" = "3. 동작 추가: 이 앱을 검색하여 'Refresh App Provisioning Profile'을 선택합니다 (백그라운드 무음 실행).";
 "srk.shortcut.step4" = "4. 동작 추가: 5초 대기 후 LocalDevVPN 연결을 해제합니다.";
 "srk.shortcut.get_icloud_button" = "사전 구성된 단축어 받기 (iCloud)";
 "srk.shortcut.view_docs_button" = "GitHub에서 단축어 설정 문서 보기 (#Shortcuts)";

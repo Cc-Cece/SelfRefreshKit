@@ -88,7 +88,7 @@
 "srk.shortcut.guide_section" = "Étapes d’automatisation en arrière-plan";
 "srk.shortcut.step1" = "1. Ouvrez l’app Raccourcis -> Automatisation, et créez un déclencheur horaire (« Exécuter immédiatement »).";
 "srk.shortcut.step2" = "2. Ajoutez l’action : Connecter LocalDevVPN, puis « Attendre 2 secondes ».";
-"srk.shortcut.step3" = "3. Ajoutez l’action : Recherchez cette app et choisissez « Actualiser le profil d’approvisionnement ».";
+"srk.shortcut.step3" = "3. Ajoutez l’action : Recherchez cette app et choisissez « Refresh App Provisioning Profile ».";
 "srk.shortcut.step4" = "4. Ajoutez l’action : Attendre 5 secondes, puis déconnecter LocalDevVPN.";
 "srk.shortcut.get_icloud_button" = "Obtenir le raccourci iCloud prêt à l’emploi";
 "srk.shortcut.view_docs_button" = "Voir la documentation sur GitHub (#Shortcuts)";

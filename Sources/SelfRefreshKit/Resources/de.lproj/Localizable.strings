@@ -88,7 +88,7 @@
 "srk.shortcut.guide_section" = "Schritte für Hintergrund-Automation";
 "srk.shortcut.step1" = "1. Öffnen Sie die App „Kurzbefehle“ -> „Automation“ und erstellen Sie eine Tageszeit-Automation („Sofort ausführen“).";
 "srk.shortcut.step2" = "2. Aktion hinzufügen: LocalDevVPN verbinden, danach „2 Sekunden warten“.";
-"srk.shortcut.step3" = "3. Aktion hinzufügen: Diese App suchen und „App-Provisioning-Profil erneuern“ wählen.";
+"srk.shortcut.step3" = "3. Aktion hinzufügen: Diese App suchen und „Refresh App Provisioning Profile“ wählen.";
 "srk.shortcut.step4" = "4. Aktion hinzufügen: 5 Sekunden warten, dann LocalDevVPN trennen.";
 "srk.shortcut.get_icloud_button" = "Fertigen iCloud-Kurzbefehl laden";
 "srk.shortcut.view_docs_button" = "Kurzbefehl-Dokumentation auf GitHub (#Shortcuts)";

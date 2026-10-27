@@ -88,7 +88,7 @@
 "srk.shortcut.guide_section" = "自动化配置步骤（纯后台运行）";
 "srk.shortcut.step1" = "1. 打开系统「快捷指令」应用，切换到「自动化」标签页并创建特定时间（如每天 04:00，选择「立即运行」）。";
 "srk.shortcut.step2" = "2. 添加动作：连接 LocalDevVPN，并添加「等待 2 秒」。";
-"srk.shortcut.step3" = "3. 添加动作：搜索本应用并选择「刷新应用签名描述文件」（纯后台静默刷新，不跳转前台）。";
+"srk.shortcut.step3" = "3. 添加动作：搜索本应用并选择「Refresh App Provisioning Profile」（纯后台静默刷新，不跳转前台）。";
 "srk.shortcut.step4" = "4. 添加动作：等待 5 秒后断开 LocalDevVPN。";
 "srk.shortcut.get_icloud_button" = "一键获取预设快捷指令 (iCloud)";
 "srk.shortcut.view_docs_button" = "查看 GitHub 快捷指令配置文档 (#Shortcuts)";

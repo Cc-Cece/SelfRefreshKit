@@ -88,7 +88,7 @@
 "srk.shortcut.guide_section" = "自動化設定步驟（純背景執行）";
 "srk.shortcut.step1" = "1. 打開系統「捷徑」應用，切換到「自動化」分頁並建立特定時間（例如每日 04:00，揀「立即執行」）。";
 "srk.shortcut.step2" = "2. 新增動作：連接 LocalDevVPN，並加入「等待 2 秒」。";
-"srk.shortcut.step3" = "3. 新增動作：搜尋本應用並選取「刷新應用簽名描述檔」（純背景靜默刷新，唔跳轉前台）。";
+"srk.shortcut.step3" = "3. 新增動作：搜尋本應用並選取「Refresh App Provisioning Profile」（純背景靜默刷新，唔跳轉前台）。";
 "srk.shortcut.step4" = "4. 新增動作：等待 5 秒後中斷連接 LocalDevVPN。";
 "srk.shortcut.get_icloud_button" = "一鍵獲取預設捷徑 (iCloud)";
 "srk.shortcut.view_docs_button" = "查看 GitHub 捷徑設定教學 (#Shortcuts)";

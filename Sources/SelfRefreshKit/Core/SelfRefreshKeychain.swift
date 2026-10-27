@@ -56,6 +56,10 @@ public enum SelfRefreshError: LocalizedError, Equatable, Sendable {
 public enum SelfRefreshKeychain {
     private static let service = "io.github.selfrefreshkit.credentials"
     private static let sessionAccount = "__apple_auth_session_v2__"
+    private static let portalSessionAccount = "__sidesign_portal_auth_session__"
+    private static let anisetteUUIDAccount = "__anisette_device_uuid__"
+    private static let anisetteADIAccount = "__anisette_adi_blob__"
+    private static let certP12Prefix = "__cert_p12_"
 
     public static func savePassword(_ password: String, for account: String) throws {
         try saveData(Data(password.utf8), for: account)
@@ -82,6 +86,52 @@ public enum SelfRefreshKeychain {
 
     public static func deleteAuthSession() throws {
         try deleteData(for: sessionAccount)
+        try deleteData(for: portalSessionAccount)
+    }
+
+    public static func savePortalSessionData(_ data: Data) throws {
+        try saveData(data, for: portalSessionAccount)
+    }
+
+    public static func loadPortalSessionData() throws -> Data? {
+        try loadData(for: portalSessionAccount)
+    }
+
+    public static func deletePortalSessionData() throws {
+        try deleteData(for: portalSessionAccount)
+    }
+
+    public static func saveCertificateP12(_ data: Data, for teamID: String) throws {
+        try saveData(data, for: "\(certP12Prefix)\(teamID)")
+    }
+
+    public static func loadCertificateP12(for teamID: String) throws -> Data? {
+        try loadData(for: "\(certP12Prefix)\(teamID)")
+    }
+
+    public static func deleteCertificateP12(for teamID: String) throws {
+        try deleteData(for: "\(certP12Prefix)\(teamID)")
+    }
+
+    public static func loadOrCreateAnisetteDeviceUUID() -> UUID {
+        if let data = try? loadData(for: anisetteUUIDAccount),
+           let str = String(data: data, encoding: .utf8),
+           let uuid = UUID(uuidString: str) {
+            return uuid
+        }
+        let newUUID = UUID()
+        if let data = newUUID.uuidString.data(using: .utf8) {
+            try? saveData(data, for: anisetteUUIDAccount)
+        }
+        return newUUID
+    }
+
+    public static func saveAnisetteADIBlob(_ data: Data) throws {
+        try saveData(data, for: anisetteADIAccount)
+    }
+
+    public static func loadAnisetteADIBlob() -> Data? {
+        try? loadData(for: anisetteADIAccount)
     }
 
     private static func saveData(_ data: Data, for account: String) throws {

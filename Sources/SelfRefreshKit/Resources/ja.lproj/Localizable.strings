@@ -88,7 +88,7 @@
 "srk.shortcut.guide_section" = "バックグラウンド自動化手順";
 "srk.shortcut.step1" = "1. 「ショートカット」アプリの「オートメーション」タブで時刻トリガー（例：毎日 04:00、「すぐに実行」）を作成します。";
 "srk.shortcut.step2" = "2. アクション追加：LocalDevVPN を接続し、「2秒待機」を追加します。";
-"srk.shortcut.step3" = "3. アクション追加：このアプリを検索し「アプリのプロファイルを更新」を選択します。";
+"srk.shortcut.step3" = "3. アクション追加：このアプリを検索し「Refresh App Provisioning Profile」を選択します。";
 "srk.shortcut.step4" = "4. アクション追加：5秒待機後、LocalDevVPN を切断します。";
 "srk.shortcut.get_icloud_button" = "定義済みショートカットを入手 (iCloud)";
 "srk.shortcut.view_docs_button" = "GitHub でショートカット設定ガイドを見る (#Shortcuts)";
