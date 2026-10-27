@@ -1,48 +1,55 @@
+<div align="center">
+
+<img src="tools/SelfRefreshSetup/Assets/SelfRefreshKit.png" width="96" height="96" alt="SelfRefreshKit" />
+
 # SelfRefreshKit
 
-**English** | [简体中文](README_ZH.md)
+Swift package for on-device provisioning profile refresh and OTA updates on iOS.
 
-**SelfRefreshKit** is a lightweight, native SwiftUI on-device provisioning profile auto-refresh and cloud OTA self-upgrade library for sideloaded iOS applications ([https://github.com/Cc-Cece/SelfRefreshKit/](https://github.com/Cc-Cece/SelfRefreshKit/), MIT License).
+[![Swift](https://img.shields.io/badge/Swift-5.9+-FA7343?logo=swift&logoColor=white)](https://swift.org)
+[![iOS](https://img.shields.io/badge/iOS-17.0+-000000?logo=apple&logoColor=white)](https://developer.apple.com/ios/)
+[![Release](https://img.shields.io/github/v/release/Cc-Cece/SelfRefreshKit?color=007AFF&logo=github)](https://github.com/Cc-Cece/SelfRefreshKit/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-It strips away bloated app-store and multi-source management overhead, focusing purely on **1-second seamless 7-day provisioning profile refresh** and **on-device IPA resigning / cloud OTA self-upgrades**. Designed to work out-of-the-box with the free **[LocalDevVPN](https://apps.apple.com/app/localdevvpn/id6744003051)** on the App Store, while remaining fully compatible with **StosVPN** and **WireGuard**.
+<p align="center">
+  <b>English</b> | <a href="README_ZH.md">简体中文</a>
+</p>
 
----
-
-## Key Features
-
-1. **Clean Two-Tier Native iOS UI (`Form` + `.insetGrouped`)**
-   - **Main Screen (`SelfRefreshView`)**: Displays only **Current Status** (`Profile Validity` + `Refresh Now`), navigation entries to secondary pages, **Component Language Picker**, and **About Component**.
-   - **Secondary Pages**:
-     - **Required Setup (`SelfRefreshRequiredSetupView`)**: 3-step onboarding checklist (Import Device Pairing File, Apple Developer Authentication with 2FA & Keychain session persistence, and Initial Local Signing Takeover).
-     - **Health Status Check (`SelfRefreshHealthCheckView`)**: 4-point live diagnostics (Pairing File + RPPairing keys, `10.7.0.1` Loopback VPN interface, Anisette V3 server latency, and Apple Developer session).
-     - **Optional Actions (`SelfRefreshOptionalActionsView`)**: Background Shortcuts automation, preferred VPN selector, configurable GitHub Releases OTA self-upgrade (with 2-step security confirmation), direct `.ipa` URL download & install dialog, and local `.ipa` resigning.
-2. **Standard 7-Language Localization (`.lproj/Localizable.strings` + `SelfRefreshL10nKey`)**
-   - Built-in support for **English (`en`), Simplified Chinese (`zh-Hans`), Cantonese / Traditional HK (`yue-Hant-HK`), Japanese (`ja`), German (`de`), French (`fr`), and Korean (`ko`)**.
-   - **Resolution Priority**: Manual user selection $\rightarrow$ Host app language (`hostLanguageProvider`) $\rightarrow$ Automatic fallback to **English (`en`)**.
-3. **Dual-Mode Signing Engine**
-   - **1-Second Profile-Only Mode (`refreshProfileOnly`)**: Updates only the ~15 KB `.mobileprovision` file via `misagent` without restarting the app or keeping a duplicate `.ipa` in sandbox storage.
-   - **Full Resign & Install Mode (`resignAndInstall`)**: Used once for initial local certificate takeover after computer sideloading, and anytime for cable-free cloud OTA updates or direct `.ipa` URL installations.
+</div>
 
 ---
 
-## Shortcuts
+SelfRefreshKit is a SwiftUI library for sideloaded iOS apps. It handles provisioning profile refresh directly on the device and OTA updates from GitHub Releases or direct URLs.
 
-`SelfRefreshKit` includes a built-in background `AppIntent` (**`Refresh App Provisioning Profile`**) with `openAppWhenRun = false` and localized `.lproj` titles across all 7 supported languages. When triggered by Apple Shortcuts, it refreshes your 7-day provisioning profile **silently in the background without opening or switching to the app**.
+Daily profile refresh runs over a local loopback VPN (`10.7.0.1`), such as [LocalDevVPN](https://apps.apple.com/app/localdevvpn/id6744003051), StosVPN, or WireGuard.
 
-[![Get Auto-Refresh Shortcut](https://img.shields.io/badge/_Shortcuts-Get_Auto--Refresh_Shortcut-007AFF?style=for-the-badge)](https://www.icloud.com/shortcuts/7f3fabf7fa234031bd1d22249bc7f84a)
+> [!NOTE]
+> Requires iOS 17.0+ and Swift 5.9+. Supports iOS 17.4+ RPPairing.
 
-### Automated Background Setup Steps
+## Features
 
-1. Tap the button above to add the official **[Auto-Refresh iCloud Shortcut](https://www.icloud.com/shortcuts/7f3fabf7fa234031bd1d22249bc7f84a)**, or create a new Personal Automation in the system **Shortcuts** app (**Automation** tab $\rightarrow$ **Time of Day**, e.g. `04:00 AM` daily, select **Run Immediately**).
-2. Add action: **Connect LocalDevVPN**, followed by **Wait 2 seconds**.
-3. Add action: Search for your host app and select **Refresh App Provisioning Profile** (runs silently in background).
-4. Add action: **Wait 5 seconds**, then **Disconnect LocalDevVPN**.
+- **Profile refresh**: Writes `.mobileprovision` directly to `misagent` over loopback. Does not restart the app or require keeping the `.ipa` in the sandbox.
+- **Shortcuts automation**: Built-in `AppIntent` (Refresh App Provisioning Profile) to trigger profile renewal via Shortcuts automation.
+- **OTA updates**: Downloads unsigned IPAs from GitHub Releases or a direct URL, resigns locally, and installs the update.
+- **Status and diagnostics UI**: Provides a SwiftUI page to display remaining profile validity and check pairing files, loopback VPN, Anisette latency, and developer session.
+- **Localization**: Built-in strings for English, Simplified Chinese, Traditional Chinese (HK), Japanese, German, French, and Korean.
 
----
+## Integration
 
-## Quick Integration (2 Steps)
+> [!NOTE]
+> Reference example: https://github.com/Cc-Cece/PicHarbor-iOS/
 
-### 1. Configure on App Startup
+### 1. Add package dependency
+
+Add `SelfRefreshKit` to your `Package.swift`:
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/Cc-Cece/SelfRefreshKit.git", from: "0.3.0")
+]
+```
+
+### 2. Configure on launch
 
 ```swift
 import SwiftUI
@@ -55,8 +62,8 @@ struct MyApp: App {
             SelfRefreshConfiguration(
                 urlScheme: "myapp",
                 preferredVPN: .localDevVPN,
-                githubRepository: "yourname/MyApp", // Optional: enables GitHub Releases OTA self-upgrade
-                hostLanguageProvider: { MyAppL10n.currentLanguageCode } // Optional: follows host app language, falls back to English
+                githubRepository: "yourname/MyApp", // Optional: for GitHub Releases updates
+                hostLanguageProvider: { MyAppL10n.currentLanguageCode } // Optional
             )
         )
     }
@@ -69,7 +76,7 @@ struct MyApp: App {
 }
 ```
 
-### 2. Embed in Host Settings Screen
+### 3. Add to settings
 
 ```swift
 import SwiftUI
@@ -78,7 +85,7 @@ import SelfRefreshKit
 struct SettingsView: View {
     var body: some View {
         List {
-            Section("Signing & Maintenance") {
+            Section("Signing") {
                 SelfRefreshSection()
             }
         }
@@ -86,8 +93,16 @@ struct SettingsView: View {
 }
 ```
 
----
+## Shortcuts Automation
 
-## License
+1. Add the preset [iCloud Shortcut](https://www.icloud.com/shortcuts/14a2c9d0bb974288a2fe45649949a6ca).
+2. Or create a personal automation in the Shortcuts app.
+3. Action: **Connect LocalDevVPN**.
+4. Action: Choose **Refresh App Provisioning Profile** for the host app.
+5. Action: Then **Disconnect LocalDevVPN**.
 
-Released under the **MIT License**. See [LICENSE](LICENSE) for details.
+## First-Time Installation
+
+First-time installation and device pairing injection require a computer:
+
+- **[SelfRefreshSetup](tools/SelfRefreshSetup)**: Windows desktop tool to sign, install, and write pairing files or RPPairing records to the app sandbox via USB. Prebuilt binaries can be downloaded directly from [Releases](https://github.com/Cc-Cece/SelfRefreshKit/releases).

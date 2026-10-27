@@ -1,48 +1,55 @@
+<div align="center">
+
+<img src="tools/SelfRefreshSetup/Assets/SelfRefreshKit.png" width="96" height="96" alt="SelfRefreshKit" />
+
 # SelfRefreshKit
 
-[English](README.md) | **简体中文**
+用于 iOS 应用本机签名描述文件刷新与 OTA 更新的 Swift 库。
 
-**SelfRefreshKit** 是一个轻量级、纯原生 SwiftUI 风格的 iOS 应用内置自续签与云端 OTA 更新通用组件库（[https://github.com/Cc-Cece/SelfRefreshKit/](https://github.com/Cc-Cece/SelfRefreshKit/)，MIT 开源）。
+[![Swift](https://img.shields.io/badge/Swift-5.9+-FA7343?logo=swift&logoColor=white)](https://swift.org)
+[![iOS](https://img.shields.io/badge/iOS-17.0+-000000?logo=apple&logoColor=white)](https://developer.apple.com/ios/)
+[![Release](https://img.shields.io/github/v/release/Cc-Cece/SelfRefreshKit?color=007AFF&logo=github)](https://github.com/Cc-Cece/SelfRefreshKit/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-它剥离了 SideStore 臃肿的应用商店与多源管理代码，只保留最核心的**「7 天描述文件极速无感刷新」**与**「首次证书夺权 / 云端未签名 IPA 自签名 OTA 升级」**能力。默认推荐配合 App Store 免费的 **[LocalDevVPN](https://apps.apple.com/app/localdevvpn/id6744003051)** 使用，同时无缝兼容 **StosVPN** 与 **WireGuard**。
+<p align="center">
+  <a href="README.md">English</a> | <b>简体中文</b>
+</p>
 
----
-
-## 核心特性
-
-1. **清爽分层原生 UI (`Form` + `.insetGrouped`)**
-   - **主页面 (`SelfRefreshView`)**：仅保留「当前状态（描述文件有效期 + 立即续签）」、二级功能导航入口、「组件语言切换」与「关于组件」。
-   - **二级页面**：
-     - **必需操作 (`SelfRefreshRequiredSetupView`)**：3 步式引导清单（1. 导入设备配对文件、2. 登录 Apple 开发者账号并加密保存会话凭证、3. 首次本机签名接管）。
-     - **健康状态检查 (`SelfRefreshHealthCheckView`)**：一键实测配对文件与 RPPairing 密钥、`10.7.0.1` 本地回环网卡、Anisette V3 节点延迟及 Apple 开发者会话状态。
-     - **可选操作 (`SelfRefreshOptionalActionsView`)**：后台快捷指令自动化、首选 VPN 切换、可配置的云端更新源（带二次高危安全确认）、输入 IPA 直链下载重签对话框、以及选择本地 IPA 重签安装。
-2. **标准 7 国语言资源体系 (`.lproj/Localizable.strings` + `SelfRefreshL10nKey`)**
-   - 原生内置：**英语 (`en`)、简体中文 (`zh-Hans`)、粤语 (`yue-Hant-HK`)、日语 (`ja`)、德语 (`de`)、法语 (`fr`)、韩语 (`ko`)**。
-   - **优先级策略**：用户手动选择语言 $\rightarrow$ 跟随宿主 App 语言 (`hostLanguageProvider`) $\rightarrow$ 未匹配时自动回退至 **英文 (`en`)**。
-3. **双模式续签引擎**
-   - **日常 1 秒极速模式 (`refreshProfileOnly`)**：仅更新 ~15KB 的 `.mobileprovision` 描述文件并注入系统 `misagent` 服务，**App 不闪退、平时无需在沙盒常备双倍体积的 `.ipa` 母本**。
-   - **完整重签模式 (`resignAndInstall`)**：既用于首次从电脑（如 Windows Sideloadly）安装后的手机端证书夺权，也用于拉取 GitHub Actions 构建的未签名 `.ipa` 或任意 `.ipa` 直链完成免数据线自我升级。
+</div>
 
 ---
 
-## Shortcuts
+SelfRefreshKit 是一个供侧载 iOS 应用集成的 SwiftUI 组件库，用于在手机本地刷新 7 天描述文件，以及通过 GitHub Releases 或直链进行 OTA 更新。
 
-`SelfRefreshKit` 内置了原生后台快捷指令动作（`SelfRefreshProfileIntent`，设置 `openAppWhenRun = false`，并通过标准 `.lproj` 资源包支持 7 国语言标题展示，默认英文 **`Refresh App Provisioning Profile`** / 中文 **「刷新应用签名描述文件」**）。在自动化触发时**纯后台静默运行，不会自动跳转或打断前台应用**。
+日常描述文件刷新通过本地回环 VPN（`10.7.0.1`）完成，支持 [LocalDevVPN](https://apps.apple.com/app/localdevvpn/id6744003051)、StosVPN 和 WireGuard。
 
-[![一键获取自动续签快捷指令](https://img.shields.io/badge/_快捷指令-一键获取自动续签快捷指令-007AFF?style=for-the-badge)](https://www.icloud.com/shortcuts/7f3fabf7fa234031bd1d22249bc7f84a)
+> [!NOTE]
+> 需要 iOS 17.0+ 和 Swift 5.9+。支持 iOS 17.4+ RPPairing。
 
-### 自动化后台续签配置步骤
+## 功能
 
-1. 点击上方按钮直接获取官方预设的 **[自动续签 iCloud 快捷指令](https://www.icloud.com/shortcuts/7f3fabf7fa234031bd1d22249bc7f84a)**，或者打开系统「快捷指令」App，切换到「自动化」标签页并创建特定时间触发器（如每天 `04:00`，勾选「立即运行」）。
-2. 添加动作：**连接 LocalDevVPN**，并添加 **「等待 2 秒」**。
-3. 添加动作：搜索本应用并选择 **「刷新应用签名描述文件 / Refresh App Provisioning Profile」**（纯后台静默刷新）。
-4. 添加动作：**等待 5 秒**后 **断开 LocalDevVPN**。
+- **描述文件刷新**：通过回环网络直接向 `misagent` 注入 `.mobileprovision`。应用无需重启，沙盒内也不用留存 IPA 文件。
+- **快捷指令后台自动化**：内置 `AppIntent`（刷新应用签名描述文件），可通过快捷指令自动化触发续签。
+- **OTA 更新**：从 GitHub Releases 或指定直链下载未签名包，在手机端重签并安装更新。
+- **状态与检查界面**：提供一个 SwiftUI 页面，展示证书剩余时间，并检查配对文件、回环网卡、Anisette 延迟和开发者凭据。
+- **多语言**：内置英文、简体中文、繁体中文（香港）、日文、德文、法文和韩文。
 
----
+## 接入步骤
 
-## 快速接入（仅需 2 步）
+> [!NOTE]
+> 参考案例：https://github.com/Cc-Cece/PicHarbor-iOS/
 
-### 1. 在宿主 App 启动时初始化配置
+### 1. 添加依赖
+
+在 `Package.swift` 中引入：
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/Cc-Cece/SelfRefreshKit.git", from: "0.3.0")
+]
+```
+
+### 2. 启动时配置
 
 ```swift
 import SwiftUI
@@ -55,8 +62,8 @@ struct MyApp: App {
             SelfRefreshConfiguration(
                 urlScheme: "myapp",
                 preferredVPN: .localDevVPN,
-                githubRepository: "yourname/MyApp", // 可选：开启云端 OTA 自签名升级默认仓库
-                hostLanguageProvider: { MyAppL10n.currentLanguageCode } // 可选：实时跟随宿主语言，未匹配回退英文
+                githubRepository: "yourname/MyApp", // 可选：用于检测 GitHub Releases 更新
+                hostLanguageProvider: { MyAppL10n.currentLanguageCode } // 可选
             )
         )
     }
@@ -69,7 +76,7 @@ struct MyApp: App {
 }
 ```
 
-### 2. 在宿主 App 的设置页嵌入入口
+### 3. 嵌入设置页
 
 ```swift
 import SwiftUI
@@ -78,7 +85,7 @@ import SelfRefreshKit
 struct SettingsView: View {
     var body: some View {
         List {
-            Section("开发者与签名维护") {
+            Section("签名与维护") {
                 SelfRefreshSection()
             }
         }
@@ -86,8 +93,16 @@ struct SettingsView: View {
 }
 ```
 
----
+## 快捷指令自动化
 
-## 开源许可 (License)
+1. 添加预设的 [iCloud 快捷指令](https://www.icloud.com/shortcuts/14a2c9d0bb974288a2fe45649949a6ca)
+2. 或在「快捷指令」App 中创建个人自动化。
+3. 添加操作：**连接 LocalDevVPN**。
+4. 添加操作：选择宿主 App 的**「刷新应用签名描述文件」**。
+5. 添加操作：然后**断开 LocalDevVPN**。
 
-本项目基于 **MIT License** 开源，详见 [LICENSE](LICENSE)。
+## 首次安装
+
+首次安装 App 并注入配对记录需要在电脑上进行：
+
+- **[SelfRefreshSetup](tools/SelfRefreshSetup)**：Windows 桌面工具，通过 USB 签名、安装 IPA，并将配对文件或 RPPairing 写入 App 沙盒。可直接在 [Releases](https://github.com/Cc-Cece/SelfRefreshKit/releases) 下载可执行文件。
