@@ -6,6 +6,7 @@ import Darwin
 
 #if canImport(SideSign)
 import SideSign
+import AnisetteKit
 #endif
 
 #if canImport(IDevice)
@@ -277,6 +278,31 @@ private final class ProbeStateBox: @unchecked Sendable {
     }
 }
 
+/// Apple rejects Mac, Xcode, and Android GrandSlam identities with -80045 before 2FA.
+/// The Windows iTunes client info and akd user agent are the pair that still completes SRP.
+enum GrandSlamClientIdentity {
+    static let windowsClientInfo = "<PC> <Windows;6.2(0,0);9200> <com.apple.AuthKit/1 (com.apple.iTunes/12.12.4.1)>"
+    static let akdUserAgent = "akd/1.0 CFNetwork/808.1.4"
+
+    static func acceptedClientInfo(from serverValue: String) -> String {
+        containsRejectedMarker(serverValue) ? windowsClientInfo : serverValue
+    }
+
+    static func acceptedUserAgent(from serverValue: String) -> String {
+        serverValue.isEmpty || containsRejectedMarker(serverValue) ? akdUserAgent : serverValue
+    }
+
+    static func isRejectedIdentityCode(_ code: Int) -> Bool {
+        code == -80045 || code == -45061
+    }
+
+    private static func containsRejectedMarker(_ value: String) -> Bool {
+        ["Macintosh", "Mac OS", "macOS", "MacBook", "Xcode", "Android"].contains {
+            value.localizedCaseInsensitiveContains($0)
+        }
+    }
+}
+
 // MARK: - Native SideSign & IDevice Helper
 
 #if canImport(SideSign)
@@ -296,21 +322,83 @@ final class RealSideSignDriverHelper: @unchecked Sendable {
         return servers
     }
 
-    func fetchFreshAnisetteData(primaryURL: URL) async throws -> AnisetteData {
+    func fetchFreshAnisetteData(primaryURL: URL, reuseSavedADIBlob: Bool = true) async throws -> AnisetteData {
         let servers = candidateAnisetteServers(primaryURL: primaryURL)
         let deviceUUID = SelfRefreshKeychain.loadOrCreateAnisetteDeviceUUID()
-        let savedADIBlob = SelfRefreshKeychain.loadAnisetteADIBlob()
+        let savedADIBlob = reuseSavedADIBlob ? SelfRefreshKeychain.loadAnisetteADIBlob() : nil
+        var requestHeaders = AnisetteRequestHeaders()
+        requestHeaders.clientInfo = GrandSlamClientIdentity.windowsClientInfo
+        requestHeaders.userAgent = GrandSlamClientIdentity.akdUserAgent
 
         let (anisetteData, newAdiBlob) = try await AnisetteDataManager.shared.fetchAnisetteDataWithFailover(
             servers: servers,
             identifier: deviceUUID,
-            existingAdiBlob: savedADIBlob
+            existingAdiBlob: savedADIBlob,
+            headers: requestHeaders
         )
 
         if let newAdiBlob {
             try? SelfRefreshKeychain.saveAnisetteADIBlob(newAdiBlob)
         }
-        return anisetteData
+        return presentingAcceptedIdentity(anisetteData)
+    }
+
+    /// GrandSlam reads `customHeaders.grandSlam.userAgent`, not the anisette user agent field.
+    func applyAcceptedGrandSlamIdentity() {
+        var headers = DeveloperPortal.shared.customHeaders
+        headers.grandSlam.userAgent = GrandSlamClientIdentity.akdUserAgent
+        headers.appleAuth.userAgent = GrandSlamClientIdentity.akdUserAgent
+        DeveloperPortal.shared.customHeaders = headers
+    }
+
+    func presentingAcceptedIdentity(_ data: AnisetteData) -> AnisetteData {
+        var copy = data
+        copy.clientInfo = GrandSlamClientIdentity.acceptedClientInfo(from: copy.clientInfo)
+        copy.userAgent = GrandSlamClientIdentity.acceptedUserAgent(from: copy.userAgent)
+        return copy
+    }
+
+    func signInToDeveloperPortal(
+        appleID: String,
+        password: String,
+        twoFactorCode: String?,
+        primaryAnisetteURL: URL
+    ) async throws -> (session: AuthSession, anisetteData: AnisetteData) {
+        applyAcceptedGrandSlamIdentity()
+        let hadSavedADIBlob = SelfRefreshKeychain.loadAnisetteADIBlob() != nil
+        do {
+            let anisetteData = try await fetchFreshAnisetteData(primaryURL: primaryAnisetteURL)
+            let authSession = try await TwoFactorAuthBridge.shared.authenticate(
+                appleID: appleID,
+                password: password,
+                twoFactorCode: twoFactorCode,
+                anisetteData: anisetteData
+            )
+            return (authSession, anisetteData)
+        } catch {
+            guard hadSavedADIBlob, isRejectedGrandSlamIdentity(error) else { throw error }
+            try? SelfRefreshKeychain.deleteAnisetteADIBlob()
+            AnisetteDataManager.shared.clearCache()
+            let anisetteData = try await fetchFreshAnisetteData(
+                primaryURL: primaryAnisetteURL,
+                reuseSavedADIBlob: false
+            )
+            let authSession = try await TwoFactorAuthBridge.shared.authenticate(
+                appleID: appleID,
+                password: password,
+                twoFactorCode: twoFactorCode,
+                anisetteData: anisetteData
+            )
+            return (authSession, anisetteData)
+        }
+    }
+
+    private func isRejectedGrandSlamIdentity(_ error: Error) -> Bool {
+        guard let serverError = error as? ServerError,
+              case .underlyingError(let code, _) = serverError else {
+            return false
+        }
+        return GrandSlamClientIdentity.isRejectedIdentityCode(code)
     }
 
     func authenticateAppleID(
@@ -319,12 +407,11 @@ final class RealSideSignDriverHelper: @unchecked Sendable {
         twoFactorCode: String?,
         primaryAnisetteURL: URL
     ) async throws -> AppleAuthSession {
-        let anisetteData = try await fetchFreshAnisetteData(primaryURL: primaryAnisetteURL)
-        let authSession = try await TwoFactorAuthBridge.shared.authenticate(
+        let (authSession, anisetteData) = try await signInToDeveloperPortal(
             appleID: appleID,
             password: password,
             twoFactorCode: twoFactorCode,
-            anisetteData: anisetteData
+            primaryAnisetteURL: primaryAnisetteURL
         )
 
         let teams = try await DeveloperPortal.shared.fetchTeams(for: authSession.account, session: authSession.session)
@@ -354,6 +441,7 @@ final class RealSideSignDriverHelper: @unchecked Sendable {
         password: String,
         primaryAnisetteURL: URL
     ) async throws -> (team: Team, session: Session) {
+        applyAcceptedGrandSlamIdentity()
         let anisetteData = try await fetchFreshAnisetteData(primaryURL: primaryAnisetteURL)
 
         if let savedData = try? SelfRefreshKeychain.loadPortalSessionData(),
@@ -368,11 +456,11 @@ final class RealSideSignDriverHelper: @unchecked Sendable {
             }
         }
 
-        let newAuth = try await TwoFactorAuthBridge.shared.authenticate(
+        let (newAuth, _) = try await signInToDeveloperPortal(
             appleID: appleID,
             password: password,
             twoFactorCode: nil,
-            anisetteData: anisetteData
+            primaryAnisetteURL: primaryAnisetteURL
         )
         if let sessionData = try? JSONEncoder().encode(newAuth) {
             try? SelfRefreshKeychain.savePortalSessionData(sessionData)

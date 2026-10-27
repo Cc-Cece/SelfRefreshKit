@@ -253,6 +253,24 @@ final class SelfRefreshKitTests: XCTestCase {
         }
         XCTAssertGreaterThanOrEqual(AnisetteServerPreset.defaults.count, 4)
     }
+
+    func testGrandSlamClientIdentityReplacesRejectedAppleClients() {
+        let windows = GrandSlamClientIdentity.windowsClientInfo
+        let mac = "<MacBookPro18,3> <macOS;26.6;25F84> <com.apple.AuthKit/1 (com.apple.akd/1.0)>"
+        let xcode = "<MacBookPro18,3> <Mac OS X;13.4.1;22F8> <com.apple.AOSKit/282 (com.apple.dt.Xcode/3594.4.19)>"
+        let android = "<Android> <Android;10> <com.apple.AuthKit/1>"
+        let macUserAgent = "AuthKit/1 (Macintosh; OS X 26.6) (com.apple.dt.Xcode/26.0)"
+
+        XCTAssertEqual(GrandSlamClientIdentity.acceptedClientInfo(from: mac), windows)
+        XCTAssertEqual(GrandSlamClientIdentity.acceptedClientInfo(from: xcode), windows)
+        XCTAssertEqual(GrandSlamClientIdentity.acceptedClientInfo(from: android), windows)
+        XCTAssertEqual(GrandSlamClientIdentity.acceptedClientInfo(from: windows), windows)
+        XCTAssertEqual(GrandSlamClientIdentity.acceptedUserAgent(from: macUserAgent), GrandSlamClientIdentity.akdUserAgent)
+        XCTAssertEqual(GrandSlamClientIdentity.acceptedUserAgent(from: GrandSlamClientIdentity.akdUserAgent), GrandSlamClientIdentity.akdUserAgent)
+        XCTAssertTrue(GrandSlamClientIdentity.isRejectedIdentityCode(-80045))
+        XCTAssertTrue(GrandSlamClientIdentity.isRejectedIdentityCode(-45061))
+        XCTAssertFalse(GrandSlamClientIdentity.isRejectedIdentityCode(-22406))
+    }
 }
 
 /// Returns a fixed developer session. Profile install and resign fail instead of inventing a 7-day profile.

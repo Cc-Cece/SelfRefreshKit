@@ -15,7 +15,8 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/SideStore/SideSign.git", branch: "main")
+        .package(url: "https://github.com/SideStore/SideSign.git", branch: "main"),
+        .package(url: "https://github.com/mahee96/AnisetteKit.git", branch: "main")
     ],
     targets: [
         .binaryTarget(
@@ -27,6 +28,7 @@ let package = Package(
             name: "SelfRefreshKit",
             dependencies: [
                 .product(name: "SideSign", package: "SideSign"),
+                .product(name: "AnisetteKit", package: "AnisetteKit"),
                 "IDevice"
             ],
             path: "Sources/SelfRefreshKit",

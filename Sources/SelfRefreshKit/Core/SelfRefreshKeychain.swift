@@ -134,6 +134,10 @@ public enum SelfRefreshKeychain {
         try? loadData(for: anisetteADIAccount)
     }
 
+    public static func deleteAnisetteADIBlob() throws {
+        try deleteData(for: anisetteADIAccount)
+    }
+
     private static func saveData(_ data: Data, for account: String) throws {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
